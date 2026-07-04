@@ -1,22 +1,124 @@
 /**
- * CityPulse AI — Reflection Agent Stub
+ * CityPulse AI — Reflection Agent
  *
- * Responsibility: Quality-check the Decision Agent's output before it reaches a human.
- * Checks confidence thresholds, unresolved conflicts, stale data, and logical consistency.
- *
- * Real implementation in Phase 3.
- * See docs/03_TRD.md §2.6 for full specification.
+ * Responsibility: Provide human oversight checks on the Decision Agent's output.
+ * Checks confidence, conflict, data staleness, and uses an LLM to sanity-check logic.
  */
 
-import type { DecisionOutput, ReflectionOutput } from "@/lib/types/agent-schemas";
+import { GoogleGenerativeAI } from "@google/generative-ai";
+import { insertReflection, insertTimelineEntry } from "../db/bigquery-client";
+import type {
+  DecisionOutput,
+  ForecastOutput,
+  TriageOutput,
+  ReflectionOutput,
+} from "@/lib/types/agent-schemas";
+import crypto from "crypto";
+
+// Initialize Gemini
+const apiKey = process.env.GEMINI_API_KEY;
+let ai: GoogleGenerativeAI | null = null;
+if (apiKey) {
+  ai = new GoogleGenerativeAI(apiKey);
+}
+
+const CONFIDENCE_THRESHOLD = 0.75;
 
 /**
- * Review a decision for quality, completeness, and confidence.
- * Phase 0: stub — not implemented.
+ * Perform a fast LLM sanity check to ensure recommendations align with the rationale.
  */
-export async function reflect(_decision: DecisionOutput): Promise<ReflectionOutput> {
-  throw new Error(
-    "Reflection Agent is not implemented until Phase 3. " +
-      "Use the API route stub (/api/reflection) for mock data.",
-  );
+async function checkConsistencyWithLLM(decision: DecisionOutput): Promise<boolean> {
+  if (!ai) {
+    // If no AI configured, assume consistent (true)
+    return true;
+  }
+
+  const model = ai.getGenerativeModel({ model: "gemini-2.0-flash" });
+  const prompt = `
+    You are a validation agent. Your job is to read a policy decision and verify if the 'recommendations' logically follow the stated 'rationale'.
+    
+    Rationale: "${decision.rationale}"
+    Recommendations: ${JSON.stringify(decision.recommendations)}
+    
+    Return EXACTLY the word "true" if they are logically consistent.
+    Return EXACTLY the word "false" if there is a glaring contradiction (e.g., rationale says air is clean, but recommendation says cancel all activities).
+  `;
+
+  try {
+    const result = await model.generateContent(prompt);
+    const text = (await result.response).text().trim().toLowerCase();
+    return text === "true";
+  } catch (err: any) {
+    console.error("Gemini failed consistency check:", err);
+    return true; // fail open for the consistency check to avoid blocking on API errors
+  }
+}
+
+/**
+ * Execute all 4 Reflection checks.
+ */
+export async function reflect(
+  decision: DecisionOutput,
+  forecastOutput: ForecastOutput,
+  triageOutput: TriageOutput,
+  decisionId: string
+): Promise<ReflectionOutput> {
+  const timestamp = new Date().toISOString();
+  const flags: string[] = [];
+
+  // Check 1: Confidence Threshold
+  if (decision.overall_confidence < CONFIDENCE_THRESHOLD) {
+    flags.push("low_confidence");
+  }
+
+  // Check 2: Unresolved Conflict
+  if (decision.conflict_detected) {
+    flags.push("unresolved_conflict");
+  }
+
+  // Check 3: Staleness (Degraded Upstream Path)
+  // Our system flags stale inputs via fallback heuristics or confidence penalties
+  if (forecastOutput.confidence < 0.6 || triageOutput.complaint_count === 0) {
+    // For the hackathon, we assume these are proxies for stale/missing data if we don't have explicit 'status: stale'
+    // Alternatively, Ingestion Agent explicitly sets a confidence_penalty if stale. We can infer it.
+    flags.push("stale_upstream_data");
+  }
+
+  // Check 4: Consistency Check (LLM)
+  const isConsistent = await checkConsistencyWithLLM(decision);
+  if (!isConsistent) {
+    flags.push("illogical_rationale");
+  }
+
+  const requiresReview = flags.length > 0;
+  const validated = !requiresReview; // If it needs review, it's not fully auto-validated
+  const notes = requiresReview
+    ? `Flagged for human review due to: ${flags.join(", ")}.`
+    : `Decision passed all structural checks.`;
+
+  const reflection: ReflectionOutput = {
+    validated,
+    requires_human_review: requiresReview,
+    flags,
+    notes,
+  };
+
+  // Log to Timeline
+  await insertTimelineEntry({
+    id: crypto.randomUUID(),
+    agent_name: "reflection",
+    zone: decision.zone,
+    timestamp,
+    action: `Reflected on decision ${decisionId}: ${requiresReview ? "Flagged for review" : "Validated"}.`,
+    input_ref: decisionId,
+    output_json: reflection as any,
+    conflict_flag: false,
+    escalation_flag: requiresReview,
+    confidence: 1.0,
+  });
+
+  // Save to DB
+  await insertReflection({ ...reflection, decisionId });
+
+  return reflection;
 }
