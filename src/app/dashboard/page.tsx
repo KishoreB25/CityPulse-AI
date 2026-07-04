@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import { ZoneRiskGrid } from "@/components/dashboard/ZoneRiskGrid";
 import { HistoricalTrends } from "@/components/dashboard/HistoricalTrends";
 import { AgentTimeline } from "@/components/dashboard/AgentTimeline";
@@ -16,13 +17,22 @@ export default function DashboardPage() {
       <div className="max-w-[1600px] mx-auto h-full flex flex-col">
         {/* Header */}
         <header className="mb-cp-6 flex items-center justify-between border-b border-cp-border-subtle pb-4">
-          <div>
-            <h1 className="text-cp-h1 font-medium font-mono uppercase tracking-widest text-cp-text-primary">
-              Mission Control
-            </h1>
-            <p className="text-cp-micro text-cp-text-secondary font-mono">
-              CityPulse AI · Live Multi-Agent Oversight
-            </p>
+          <div className="flex items-center gap-cp-4">
+            <Link 
+              href="/" 
+              className="text-cp-text-secondary hover:text-cp-accent-primary transition-colors flex items-center justify-center p-2 border border-transparent hover:border-cp-border-subtle rounded bg-cp-bg-surface-raised"
+              title="Return to Core"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m15 18-6-6 6-6"/></svg>
+            </Link>
+            <div>
+              <h1 className="text-cp-h1 font-medium font-mono uppercase tracking-widest text-cp-text-primary">
+                Mission Control
+              </h1>
+              <p className="text-cp-micro text-cp-text-secondary font-mono">
+                CityPulse AI · Live Multi-Agent Oversight
+              </p>
+            </div>
           </div>
           
           <div className="flex items-center gap-cp-6">
