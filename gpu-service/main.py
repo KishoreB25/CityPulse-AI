@@ -22,7 +22,7 @@ except ImportError:
     from sklearn.cluster import DBSCAN as cpuDBSCAN
     from sklearn.linear_model import LinearRegression as cpuLinearRegression
 
-app = FastAPI(title="CityPulse AI — GPU Acceleration Service")
+app = FastAPI(title="CityPulse AI - GPU Acceleration Service")
 
 # =============================================================================
 # Models
