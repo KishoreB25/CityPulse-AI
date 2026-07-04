@@ -595,32 +595,37 @@ export async function insertComplaint(record: IngestionOutput): Promise<string> 
   return id;
 }
 
-export async function insertForecast(record: ForecastOutput): Promise<string> {
+export async function insertForecast(
+  record: ForecastOutput,
+  isWhatif: boolean = false,
+  whatifParams: any = null
+): Promise<string> {
   const id = crypto.randomUUID();
+  const generatedAt = new Date().toISOString();
   if (isGcpEnabled && bq) {
     await insertBqRow("forecasts", {
       id,
       zone: record.zone,
-      generated_at: new Date().toISOString(),
+      generated_at: generatedAt,
       predicted_aqi: record.predicted_aqi,
       horizon_hours: record.horizon_hours,
       confidence: record.confidence,
       reasoning: record.reasoning || null,
-      is_whatif: false,
-      whatif_params: null,
+      is_whatif: isWhatif,
+      whatif_params: whatifParams ? JSON.stringify(whatifParams) : null,
       created_at: new Date().toISOString(),
     });
   } else {
     await db.insert(schema.forecasts).values({
       id,
       zone: record.zone,
-      generatedAt: new Date().toISOString(),
+      generatedAt,
       predictedAqi: record.predicted_aqi,
       horizonHours: record.horizon_hours,
       confidence: record.confidence,
       reasoning: record.reasoning || null,
-      isWhatif: false,
-      whatifParams: null,
+      isWhatif,
+      whatifParams,
     });
   }
   return id;
