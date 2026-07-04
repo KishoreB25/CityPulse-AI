@@ -13,7 +13,7 @@ export function HistoricalTrends({ zone }: { zone: string }) {
   useEffect(() => {
     async function fetchHistory() {
       try {
-        const res = await fetch(`/api/ingestion/history?zone=${zone}`);
+        const res = await fetch(`/api/ingestion/history?zone=${zone}&t=${Date.now()}`);
         if (res.ok) {
           const fetchedData = await res.json();
           if (fetchedData && fetchedData.length > 0) {
