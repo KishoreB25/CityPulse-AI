@@ -15,21 +15,22 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Missing zone or traffic_multiplier" }, { status: 400 });
     }
 
-    // 1. Fetch latest triage data for the zone
-    const triageRecord = sqlite.prepare("SELECT * FROM triage_results WHERE zone = ? ORDER BY generated_at DESC LIMIT 1").get(zone) as any;
-    const triageOutput: TriageOutput = triageRecord ? {
-      zone: triageRecord.zone,
-      complaint_count: triageRecord.complaintCount,
-      trend_vs_yesterday: triageRecord.trendVsYesterday,
-      severity_signal: triageRecord.severitySignal,
-      hotspot_detected: Boolean(triageRecord.hotspotDetected),
-      summary: triageRecord.summary
-    } : { zone, complaint_count: 0, trend_vs_yesterday: "flat", severity_signal: "low", hotspot_detected: false, summary: "No data" };
+    // 1. Fetch latest triage data for the zone from the agent log
+    const triageRecord = sqlite.prepare("SELECT output_json FROM agent_decisions_log WHERE zone = ? AND agent_name = 'triage' ORDER BY timestamp DESC LIMIT 1").get(zone) as any;
+    let triageOutput: TriageOutput = { zone, complaint_count: 0, trend_vs_yesterday: "flat", severity_signal: "low", hotspot_detected: false, summary: "No data" };
+    if (triageRecord && triageRecord.output_json) {
+        triageOutput = JSON.parse(triageRecord.output_json);
+    }
 
     // 2. Fetch latest actual forecast data to use as a baseline
-    const forecastRecord = sqlite.prepare("SELECT * FROM forecasts WHERE zone = ? AND is_whatif = 0 ORDER BY generated_at DESC LIMIT 1").get(zone) as any;
-    const baseAqi = forecastRecord ? forecastRecord.predictedAqi : 100;
-    const baseConfidence = forecastRecord ? forecastRecord.confidence : 0.8;
+    const forecastRecord = sqlite.prepare("SELECT output_json FROM agent_decisions_log WHERE zone = ? AND agent_name = 'forecast' ORDER BY timestamp DESC LIMIT 1").get(zone) as any;
+    let baseAqi = 100;
+    let baseConfidence = 0.8;
+    if (forecastRecord && forecastRecord.output_json) {
+        const parsed = JSON.parse(forecastRecord.output_json);
+        baseAqi = parsed.predicted_aqi || 100;
+        baseConfidence = parsed.confidence || 0.8;
+    }
 
     // 3. Simulate Forecast Agent with the WhatIf overrides
     // Instead of calling the full Python backend, we simulate the 'what-if' math rapidly here to meet the <2000ms latency target natively.
