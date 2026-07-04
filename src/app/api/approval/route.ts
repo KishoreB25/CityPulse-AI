@@ -1,78 +1,65 @@
 import { NextRequest, NextResponse } from "next/server";
-import type {
-  ApprovalPendingItem,
-  ApprovalRequest,
-  ApprovalResponse,
-} from "@/lib/types/agent-schemas";
-
-const MOCK_PENDING: ApprovalPendingItem[] = [
-  {
-    decision: {
-      id: "decision-zone-a",
-      generated_at: new Date().toISOString(),
-      zone: "Zone-A",
-      risk_level: "high",
-      overall_confidence: 0.76,
-      conflict_detected: false,
-      recommendations: [
-        { target: "schools", action: "Postpone outdoor sports and recess activities" },
-        { target: "hospital", action: "Prepare for ~15% increase in respiratory admissions" },
-        { target: "transit", action: "Issue air quality warning on displays" },
-        { target: "citizens", action: "Avoid prolonged outdoor exposure" },
-      ],
-      rationale:
-        "Forecast AQI 158 with upward trend, corroborated by 47 citizen complaints near industrial corridor.",
-    },
-    reflection: {
-      validated: true,
-      requires_human_review: true,
-      flags: [],
-      notes: "High-risk classification — standard human review required.",
-    },
-    _mock: true,
-  },
-  {
-    decision: {
-      id: "decision-zone-c",
-      generated_at: new Date().toISOString(),
-      zone: "Zone-C",
-      risk_level: "severe",
-      overall_confidence: 0.68,
-      conflict_detected: true,
-      recommendations: [
-        { target: "schools", action: "Cancel all outdoor activities" },
-        { target: "hospital", action: "Activate surge protocol; +28% respiratory admissions expected" },
-        { target: "transit", action: "Issue immediate air quality emergency warning" },
-        { target: "citizens", action: "Stay indoors with windows closed" },
-      ],
-      rationale:
-        "CONFLICT RESOLVED: Forecast vs. citizen reports divergence confirmed by supplementary sensor data.",
-    },
-    reflection: {
-      validated: true,
-      requires_human_review: true,
-      flags: ["conflict_resolved_with_supplementary_data", "high_complaint_volume"],
-      notes: "Conflict was resolved but human review strongly recommended due to severity.",
-    },
-    _mock: true,
-  },
-];
-
-export async function GET() {
-  return NextResponse.json(MOCK_PENDING);
-}
+import { sqlite } from "@/lib/db";
+import { insertTimelineEntry } from "@/lib/db/bigquery-client";
+import type { ApprovalResponse } from "@/lib/types/agent-schemas";
+import crypto from "crypto";
 
 export async function POST(request: NextRequest) {
-  const body = (await request.json()) as ApprovalRequest;
+  try {
+    const body = await request.json();
+    const { decision_id, approved, reviewer_id, notes } = body;
 
-  const response: ApprovalResponse = {
-    decision_id: body.decision_id,
-    approval_status: body.approved ? "approved" : "rejected",
-    reviewer_id: body.reviewer_id,
-    reviewed_at: new Date().toISOString(),
-    notes: body.notes,
-    _mock: true,
-  };
+    if (!decision_id || approved === undefined || !reviewer_id) {
+      return NextResponse.json(
+        { error: "decision_id, approved, and reviewer_id parameters are required" },
+        { status: 400 }
+      );
+    }
 
-  return NextResponse.json(response);
+    const timestamp = new Date().toISOString();
+    const status = approved ? "approved" : "rejected";
+
+    // Check if decision exists
+    const decision = sqlite.prepare("SELECT * FROM decisions WHERE id = ?").get(decision_id) as any;
+    if (!decision) {
+      return NextResponse.json({ error: "Decision not found" }, { status: 404 });
+    }
+
+    // Update decision approval status
+    sqlite.prepare(`
+      UPDATE decisions 
+      SET approval_status = ?, reviewer_id = ?, reviewed_at = ?
+      WHERE id = ?
+    `).run(status, reviewer_id, timestamp, decision_id);
+
+    // Log to Timeline
+    await insertTimelineEntry({
+      id: crypto.randomUUID(),
+      agent_name: "human",
+      zone: decision.zone,
+      timestamp,
+      action: `Human reviewer ${reviewer_id} ${status} decision ${decision_id}. ${notes ? 'Notes: ' + notes : ''}`,
+      input_ref: decision_id,
+      output_json: { approval_status: status, reviewer_id, notes },
+      conflict_flag: false,
+      escalation_flag: false,
+      confidence: 1.0,
+    });
+
+    const response: ApprovalResponse = {
+      decision_id,
+      approval_status: status,
+      reviewer_id,
+      reviewed_at: timestamp,
+      notes
+    };
+
+    return NextResponse.json(response);
+  } catch (error: any) {
+    console.error("Approval API failed:", error);
+    return NextResponse.json(
+      { error: "Failed to process approval", details: error.message },
+      { status: 500 }
+    );
+  }
 }

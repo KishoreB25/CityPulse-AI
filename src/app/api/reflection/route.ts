@@ -1,44 +1,72 @@
 import { NextRequest, NextResponse } from "next/server";
-import type { ReflectionOutput } from "@/lib/types/agent-schemas";
-
-const MOCK_REFLECTIONS: Record<string, ReflectionOutput> = {
-  "decision-zone-a": {
-    validated: true,
-    requires_human_review: true,
-    flags: [],
-    notes: "Decision is well-supported by aligned forecast and triage signals. Confidence above minimum threshold. Recommending human review as standard protocol for High-risk classification.",
-    _mock: true,
-  },
-  "decision-zone-b": {
-    validated: true,
-    requires_human_review: false,
-    flags: [],
-    notes: "Low-risk decision with high confidence and no conflicts. Routine — no flags raised.",
-    _mock: true,
-  },
-  "decision-zone-c": {
-    validated: true,
-    requires_human_review: true,
-    flags: ["conflict_resolved_with_supplementary_data", "high_complaint_volume"],
-    notes: "Conflict between forecast and triage was resolved via supplementary sensor data from Zone-B, which confirmed the localized pollution plume. Human review is strongly recommended due to the severity of the recommendation and the conflict resolution path taken.",
-    _mock: true,
-  },
-  "decision-zone-d": {
-    validated: true,
-    requires_human_review: false,
-    flags: [],
-    notes: "Low-risk decision with highest confidence score. All signals aligned. No review required.",
-    _mock: true,
-  },
-};
+import { sqlite } from "@/lib/db";
+import { reflect } from "@/lib/agents/reflection-agent";
+import type { DecisionOutput, ForecastOutput, TriageOutput } from "@/lib/types/agent-schemas";
 
 export async function GET(request: NextRequest) {
-  const decisionId = request.nextUrl.searchParams.get("decision_id");
+  try {
+    const decision_id = request.nextUrl.searchParams.get("decision_id");
 
-  if (decisionId && MOCK_REFLECTIONS[decisionId]) {
-    return NextResponse.json(MOCK_REFLECTIONS[decisionId]);
+    if (!decision_id) {
+      return NextResponse.json({ error: "decision_id parameter is required" }, { status: 400 });
+    }
+
+    // Check if reflection already exists in db
+    const existingReflection = sqlite.prepare("SELECT * FROM reflections WHERE decision_id = ?").get(decision_id) as any;
+    if (existingReflection) {
+      return NextResponse.json({
+        decision_id: existingReflection.decision_id,
+        validated: Boolean(existingReflection.validated),
+        requires_human_review: Boolean(existingReflection.requires_human_review),
+        flags: JSON.parse(existingReflection.flags),
+        notes: existingReflection.notes
+      });
+    }
+
+    // Fetch the decision
+    const decisionRecord = sqlite.prepare("SELECT * FROM decisions WHERE id = ?").get(decision_id) as any;
+    if (!decisionRecord) {
+      return NextResponse.json({ error: "Decision not found" }, { status: 404 });
+    }
+    
+    const decision: DecisionOutput = {
+      zone: decisionRecord.zone,
+      risk_level: decisionRecord.riskLevel, // Drizzle schema mapping (riskLevel)
+      overall_confidence: decisionRecord.overallConfidence,
+      conflict_detected: Boolean(decisionRecord.conflictDetected),
+      recommendations: JSON.parse(decisionRecord.recommendations),
+      rationale: decisionRecord.rationale
+    };
+
+    // We need Forecast and Triage outputs.
+    const forecastRecord = sqlite.prepare("SELECT * FROM aqi_forecasts WHERE zone = ? ORDER BY generated_at DESC LIMIT 1").get(decision.zone) as any;
+    const forecastOutput: ForecastOutput = forecastRecord ? {
+      zone: decision.zone,
+      predicted_aqi: forecastRecord.predictedAqi,
+      horizon_hours: forecastRecord.horizonHours,
+      confidence: forecastRecord.confidence,
+      reasoning: forecastRecord.reasoning
+    } : { zone: decision.zone, predicted_aqi: 50, horizon_hours: 24, confidence: 1.0, reasoning: "" };
+
+    const triageRecord = sqlite.prepare("SELECT * FROM triage_results WHERE zone = ? ORDER BY generated_at DESC LIMIT 1").get(decision.zone) as any;
+    const triageOutput: TriageOutput = triageRecord ? {
+      zone: decision.zone,
+      complaint_count: triageRecord.complaintCount,
+      trend_vs_yesterday: triageRecord.trendVsYesterday,
+      severity_signal: triageRecord.severitySignal,
+      hotspot_detected: Boolean(triageRecord.hotspotDetected),
+      summary: triageRecord.summary
+    } : { zone: decision.zone, complaint_count: 0, trend_vs_yesterday: "flat", severity_signal: "low", hotspot_detected: false, summary: "" };
+
+    // Execute Reflection
+    const reflection = await reflect(decision, forecastOutput, triageOutput, decision_id);
+    
+    return NextResponse.json({ decision_id, ...reflection });
+  } catch (error: any) {
+    console.error("Reflection API failed:", error);
+    return NextResponse.json(
+      { error: "Failed to run reflection", details: error.message },
+      { status: 500 }
+    );
   }
-
-  // Return all reflections if no specific decision_id
-  return NextResponse.json(Object.values(MOCK_REFLECTIONS));
 }
