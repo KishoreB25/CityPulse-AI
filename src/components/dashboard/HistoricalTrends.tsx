@@ -55,7 +55,7 @@ export function HistoricalTrends() {
             >
               <div 
                 className={`w-full ${colorClass} opacity-80 group-hover:opacity-100 transition-opacity`} 
-                style={{ height: \`\${heightPct}%\` }}
+                style={{ height: `${heightPct}%` }}
               />
               <div className="absolute -top-6 left-1/2 -translate-x-1/2 bg-cp-bg-surface border border-cp-border-subtle px-1 text-[10px] hidden group-hover:block z-20 text-cp-text-primary whitespace-nowrap">
                 {Math.round(d.aqi)}
