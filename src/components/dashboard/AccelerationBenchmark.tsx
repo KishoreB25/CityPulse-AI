@@ -72,13 +72,14 @@ export function AccelerationBenchmark() {
             </div>
           </div>
 
-          <div className="mt-2 text-center">
-            <span className="text-2xl font-bold text-cp-text-primary">{result.speedup.toFixed(1)}x</span>
-            <span className="text-cp-text-muted text-xs uppercase ml-2 tracking-widest">Speedup</span>
-          </div>
-          
-          <div className="text-[10px] text-cp-text-muted mt-auto pt-2 border-t border-cp-border-subtle text-center italic">
-            This proves the {result.speedup.toFixed(1)}x faster "What-If" interactivity.
+          <div className="mt-2 text-center flex flex-col items-center gap-2">
+            <div>
+              <span className="text-2xl font-bold text-cp-text-primary">{result.speedup.toFixed(1)}x</span>
+              <span className="text-cp-text-muted text-xs uppercase ml-2 tracking-widest">Speedup</span>
+            </div>
+            <div className="text-[10px] text-cp-text-secondary bg-cp-bg-base border border-cp-border-subtle px-3 py-1 mt-1">
+              * This proves the {result.speedup.toFixed(1)}x faster "What-If" interactivity.
+            </div>
           </div>
         </div>
       )}

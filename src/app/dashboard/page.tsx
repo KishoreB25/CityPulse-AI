@@ -12,8 +12,8 @@ export default function DashboardPage() {
   const [selectedZone, setSelectedZone] = useState("Delhi");
 
   return (
-    <main className="min-h-screen bg-cp-bg-base text-cp-text-primary p-cp-4 sm:p-cp-6">
-      <div className="max-w-[1600px] mx-auto h-[calc(100vh-3rem)] flex flex-col">
+    <main className="h-screen overflow-hidden bg-cp-bg-base text-cp-text-primary p-cp-4 sm:p-cp-6">
+      <div className="max-w-[1600px] mx-auto h-full flex flex-col">
         {/* Header */}
         <header className="mb-cp-6 flex items-center justify-between border-b border-cp-border-subtle pb-4">
           <div>
