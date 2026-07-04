@@ -17,7 +17,12 @@ export function HistoricalTrends({ zone }: { zone: string }) {
         if (res.ok) {
           const fetchedData = await res.json();
           if (fetchedData && fetchedData.length > 0) {
-            setData(fetchedData);
+            // Pad to 24 elements so the CSS grid always maintains its 24-column layout
+            const padded = [...fetchedData];
+            while (padded.length < 24) {
+              padded.unshift({ timestamp: "", aqi: 0 });
+            }
+            setData(padded.slice(-24));
             return;
           }
         }
