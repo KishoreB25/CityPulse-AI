@@ -19,6 +19,18 @@
 | `09_EXTENSIONS.md` | Optional stretch features to strengthen judging position | anytime after core loop works |
 | `10_ARCHITECTURE_DIAGRAM.md` | Full system diagram (Mermaid + ASCII), reproduced/expanded from `04_ARCHITECTURE.md` §1 | reference |
 
+## 5-Day Sprint Plan Mapping (Mentor Guidelines)
+
+To align with the 5-day hackathon sprint structure provided by the mentor, the phases map to the following days:
+
+| Day | Goal | Associated Phases |
+|---|---|---|
+| **Day 1** | Lock user story + decision moment. Set up DB schema, Cloud Storage + BigQuery with real data. | Phase 0 & Phase 1 |
+| **Day 2** | Build cuDF processing pipeline. Run benchmark vs pandas. Screenshot timing. | Phase 2 & Phase 6 |
+| **Day 3** | Wire Gemini for decision intelligence (the "should we issue an alert?" reasoning layer). | Phase 3 |
+| **Day 4** | Looker Studio dashboard OR React frontend. Make it clickable and demo-able. Apply "Mission Control" UI rules. | Phase 4 & Phase 5 |
+| **Day 5** | Demo video, README, architecture diagram, acceleration benchmark slide. | Phase 6 & Phase 7 |
+
 ## How to use these files
 1. Do not start a phase until the previous phase's "Milestone check" passes. A partially-working Decision Agent built on top of a broken Ingestion Agent wastes more time than it saves.
 2. Every phase file has a **Verify Before Building** box — items I am not fully certain about (library syntax, API contracts, timing estimates) that you should check against current documentation before your team commits time to them.

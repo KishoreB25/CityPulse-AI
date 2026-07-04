@@ -14,6 +14,13 @@ Required views, stated explicitly:
 - Agent activity timeline (Part B below)
 - What-if simulation control (Part C below)
 
+### UI Design Guidelines (Mentor Instructions)
+Per the mentor's updated guidelines, the presentation layer must strictly adhere to the following **"Mission Control"** aesthetic rather than generic admin UI or playful cyberpunk styles:
+*   **Vibe:** Data-dense, calm authority. This is a tool for health officers making real decisions under time pressure.
+*   **Color Palette:** Dark-mode-first. Use a strict 4-color semantic risk scale (`low` / `medium` / `high` / `severe`) for all risk displays.
+*   **Typography:** Use a **Mono font** for all data values to give it an instrument-panel feel.
+*   **Consistency:** Route every component (cards, borders, badges) back to the same four-color risk scale and use consistent left-border-accent patterns for showing risk levels.
+
 **Looker vs. native dashboard — a real tradeoff, not specified in your docs:**
 `05_TECH_STACK.md` names Looker as the presentation layer, and it's listed as a "load-bearing" tool in the "why this satisfies two-or-more Google Cloud tools" justification. That said, your docs don't specify Looker embedding mechanics, and Looker setup/auth/embedding time is genuinely unknown to me.
 

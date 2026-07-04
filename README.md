@@ -19,6 +19,12 @@ All project reference documents are in [`/docs`](./docs):
 - [`05_TECH_STACK.md`](./docs/05_TECH_STACK.md) — Google Cloud + NVIDIA tool mapping
 - [`skills.md`](./docs/skills.md) — UI design system and behavioral guardrails
 
+## Mentor Guidelines & Sprint Plan
+
+Based on the mentor's guidelines, this project follows a strict **5-Day Sprint Plan** combined with a robust **"Mission Control"** UI philosophy:
+*   **Sprint Plan:** Development is broken down into a structured 5-day sprint mapping to 7 core phases, fully detailed in [`/Phases/00_INDEX.md`](./Phases/00_INDEX.md).
+*   **UI/UX Aesthetic:** The frontend avoids playful designs in favor of a "Mission Control" vibe (dark mode, strict 4-color risk scale, mono font for data) to present a serious, data-dense decision interface. (Detailed in Phase 5 documentation).
+
 ## Setup
 
 ### Prerequisites
