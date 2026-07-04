@@ -70,7 +70,7 @@ export function HistoricalTrends({ zone }: { zone: string }) {
           return (
             <div 
               key={i} 
-              className="flex-1 flex flex-col justify-end group relative"
+              className="h-full flex-1 flex flex-col justify-end group relative"
             >
               <div 
                 className={`w-full ${colorClass} opacity-80 group-hover:opacity-100 transition-opacity`} 
