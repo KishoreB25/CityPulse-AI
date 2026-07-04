@@ -1,54 +1,36 @@
 import { NextRequest, NextResponse } from "next/server";
-import type { TriageOutput } from "@/lib/types/agent-schemas";
+import { triage } from "@/lib/agents/triage-agent";
 
-const MOCK_TRIAGE_DATA: TriageOutput[] = [
-  {
-    zone: "Zone-A",
-    complaint_count: 47,
-    trend_vs_yesterday: "up",
-    severity_signal: "high",
-    hotspot_detected: true,
-    summary:
-      "Significant increase in respiratory complaints clustered near the industrial corridor. DBSCAN clustering identified 3 spatial hotspots with high temporal correlation to PM2.5 spikes.",
-    _mock: true,
-  },
-  {
-    zone: "Zone-B",
-    complaint_count: 12,
-    trend_vs_yesterday: "flat",
-    severity_signal: "low",
-    hotspot_detected: false,
-    summary:
-      "Complaint volume within normal range. No spatial clustering detected. Reports are dispersed geographically and temporally.",
-    _mock: true,
-  },
-  {
-    zone: "Zone-C",
-    complaint_count: 83,
-    trend_vs_yesterday: "up",
-    severity_signal: "very_high",
-    hotspot_detected: true,
-    summary:
-      "Major complaint spike with 83 reports in the last 6 hours, primarily visibility and respiratory categories. Two dense clusters detected near the highway interchange and the residential district downwind of it.",
-    _mock: true,
-  },
-  {
-    zone: "Zone-D",
-    complaint_count: 5,
-    trend_vs_yesterday: "down",
-    severity_signal: "low",
-    hotspot_detected: false,
-    summary:
-      "Minimal complaint activity, down from yesterday. No actionable clusters or severity signals.",
-    _mock: true,
-  },
-];
+const DEFAULT_ZONES = ["Zone-A", "Zone-B", "Zone-C", "Zone-D"];
 
 export async function GET(request: NextRequest) {
-  const zone = request.nextUrl.searchParams.get("zone");
-  const data = zone
-    ? MOCK_TRIAGE_DATA.filter((d) => d.zone === zone)
-    : MOCK_TRIAGE_DATA;
-
-  return NextResponse.json(data);
+  try {
+    const zone = request.nextUrl.searchParams.get("zone");
+    
+    if (zone) {
+      const result = await triage(zone);
+      return NextResponse.json([result]);
+    } else {
+      // Run triage for all default zones in parallel
+      const results = await Promise.all(
+        DEFAULT_ZONES.map((z) => triage(z).catch((err) => {
+          console.error(`Failed to triage ${z}: ${err.message}`);
+          return {
+            zone: z,
+            complaint_count: 0,
+            trend_vs_yesterday: "flat" as const,
+            severity_signal: "low" as const,
+            hotspot_detected: false,
+            summary: `Triage execution failed: ${err.message}`,
+          };
+        }))
+      );
+      return NextResponse.json(results);
+    }
+  } catch (error: any) {
+    return NextResponse.json(
+      { error: { code: "TRIAGE_FAILED", message: error.message } },
+      { status: 500 }
+    );
+  }
 }
