@@ -22,7 +22,7 @@ except ImportError:
     from sklearn.cluster import DBSCAN as cpuDBSCAN
     from sklearn.linear_model import LinearRegression as cpuLinearRegression
 
-app = FastAPI(title="CityPulse AI — GPU Acceleration Service")
+app = FastAPI(title="CityPulse AI - GPU Acceleration Service")
 
 # =============================================================================
 # Models
@@ -242,9 +242,9 @@ def run_forecast(req: ForecastRequest):
 @app.get("/benchmark")
 def run_benchmark():
     """
-    Phase 6 Benchmark Endpoint (stubbed for now, returns comparison of DBSCAN clustering).
+    Phase 6 Benchmark Endpoint (stress test comparison of DBSCAN clustering).
     """
-    size = 1000
+    size = 50000
     dummy_coords = np.random.rand(size, 2).astype(np.float32)
 
     # CPU Run

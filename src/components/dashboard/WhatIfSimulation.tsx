@@ -59,7 +59,7 @@ export function WhatIfSimulation({ zone }: { zone: string }) {
         <button 
           onClick={handleSimulate}
           disabled={loading}
-          className="w-full bg-cp-border-strong hover:bg-cp-text-secondary text-cp-bg-base font-bold uppercase text-xs py-2 px-4 transition-colors disabled:opacity-50"
+          className="w-full bg-cp-text-secondary hover:bg-cp-text-primary text-cp-bg-base font-bold uppercase text-xs py-2 px-4 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
         >
           {loading ? "Simulating..." : "Run Simulation"}
         </button>

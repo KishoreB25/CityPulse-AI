@@ -1,27 +1,38 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import { ZoneRiskGrid } from "@/components/dashboard/ZoneRiskGrid";
 import { HistoricalTrends } from "@/components/dashboard/HistoricalTrends";
 import { AgentTimeline } from "@/components/dashboard/AgentTimeline";
 import { WhatIfSimulation } from "@/components/dashboard/WhatIfSimulation";
 import { ApprovalQueue } from "@/components/dashboard/ApprovalQueue";
+import { AccelerationBenchmark } from "@/components/dashboard/AccelerationBenchmark";
 
 export default function DashboardPage() {
   const [selectedZone, setSelectedZone] = useState("Delhi");
 
   return (
-    <main className="min-h-screen bg-cp-bg-base text-cp-text-primary p-cp-4 sm:p-cp-6">
-      <div className="max-w-[1600px] mx-auto h-[calc(100vh-3rem)] flex flex-col">
+    <main className="h-screen overflow-hidden bg-cp-bg-base text-cp-text-primary p-cp-4 sm:p-cp-6">
+      <div className="max-w-[1600px] mx-auto h-full flex flex-col">
         {/* Header */}
         <header className="mb-cp-6 flex items-center justify-between border-b border-cp-border-subtle pb-4">
-          <div>
-            <h1 className="text-cp-h1 font-medium font-mono uppercase tracking-widest text-cp-text-primary">
-              Mission Control
-            </h1>
-            <p className="text-cp-micro text-cp-text-secondary font-mono">
-              CityPulse AI · Live Multi-Agent Oversight
-            </p>
+          <div className="flex items-center gap-cp-4">
+            <Link 
+              href="/" 
+              className="text-cp-text-secondary hover:text-cp-accent-primary transition-colors flex items-center justify-center p-2 border border-transparent hover:border-cp-border-subtle rounded bg-cp-bg-surface-raised"
+              title="Return to Core"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m15 18-6-6 6-6"/></svg>
+            </Link>
+            <div>
+              <h1 className="text-cp-h1 font-medium font-mono uppercase tracking-widest text-cp-text-primary">
+                Mission Control
+              </h1>
+              <p className="text-cp-micro text-cp-text-secondary font-mono">
+                CityPulse AI · Live Multi-Agent Oversight
+              </p>
+            </div>
           </div>
           
           <div className="flex items-center gap-cp-6">
@@ -72,9 +83,14 @@ export default function DashboardPage() {
             </div>
           </div>
 
-          {/* Right Column: What-If Simulation */}
-          <div className="lg:col-span-4 min-h-0">
-            <WhatIfSimulation zone={selectedZone} />
+          {/* Right Column: What-If Simulation & Benchmark */}
+          <div className="lg:col-span-4 min-h-0 flex flex-col gap-cp-4">
+            <div className="flex-1 min-h-0">
+              <WhatIfSimulation zone={selectedZone} />
+            </div>
+            <div className="h-64 shrink-0">
+              <AccelerationBenchmark />
+            </div>
           </div>
           
         </div>

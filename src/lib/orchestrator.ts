@@ -11,16 +11,27 @@
  * Real implementation in Phase 2.
  * See docs/03_TRD.md §3 for full specification.
  */
+import { appGraph } from "./orchestrator/graph";
+import { CityPulseState } from "./orchestrator/state";
 
 /**
- * Run the full pipeline: Ingestion → Forecast/Triage → Decision → Reflection → Human → Notification
- * Phase 0: stub — not implemented.
+ * Triggers the entire CityPulse Multi-Agent pipeline via LangGraph.
+ * 
+ * @param zone The target zone (e.g., "Zone-A", "Delhi")
+ * @param threadId The unique ID for the graph execution thread
+ * @returns The final state of the graph after all agents have run
  */
-export async function runPipeline(_zone?: string): Promise<void> {
-  throw new Error(
-    "Orchestrator pipeline is not implemented until Phase 2. " +
-      "Phase 0 provides API route stubs with mock data at /api/*.",
+export async function runPipeline(zone: string, threadId: string): Promise<CityPulseState> {
+  console.log(`[Orchestrator] Starting LangGraph pipeline for zone: ${zone}, thread: ${threadId}`);
+  
+  // Invoke the compiled graph with the initial state and the checkpointer thread_id
+  const finalState = await appGraph.invoke(
+    { zone, decisionId: threadId },
+    { configurable: { thread_id: threadId } }
   );
+  
+  console.log(`[Orchestrator] Pipeline completed for zone: ${zone}`);
+  return finalState;
 }
 
 /**
