@@ -6,6 +6,7 @@ import { HistoricalTrends } from "@/components/dashboard/HistoricalTrends";
 import { AgentTimeline } from "@/components/dashboard/AgentTimeline";
 import { WhatIfSimulation } from "@/components/dashboard/WhatIfSimulation";
 import { ApprovalQueue } from "@/components/dashboard/ApprovalQueue";
+import { AccelerationBenchmark } from "@/components/dashboard/AccelerationBenchmark";
 
 export default function DashboardPage() {
   const [selectedZone, setSelectedZone] = useState("Delhi");
@@ -72,9 +73,14 @@ export default function DashboardPage() {
             </div>
           </div>
 
-          {/* Right Column: What-If Simulation */}
-          <div className="lg:col-span-4 min-h-0">
-            <WhatIfSimulation zone={selectedZone} />
+          {/* Right Column: What-If Simulation & Benchmark */}
+          <div className="lg:col-span-4 min-h-0 flex flex-col gap-cp-4">
+            <div className="flex-1 min-h-0">
+              <WhatIfSimulation zone={selectedZone} />
+            </div>
+            <div className="h-64 shrink-0">
+              <AccelerationBenchmark />
+            </div>
           </div>
           
         </div>
