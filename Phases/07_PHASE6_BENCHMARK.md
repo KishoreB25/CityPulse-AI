@@ -1,6 +1,8 @@
 # Phase 6 — Acceleration Benchmark (pandas vs. cudf.pandas/cuML)
 
-**Window:** Hours 36–44 · **Team:** 1–2 people (ideally Phase 2's Triage owners)
+> **NOTE:** This phase will be handled by the user's friends.
+
+**Window:** Hours 36–44 · **Team:** 1–2 people (Assigned to friends)
 **Source:** `05_TECH_STACK.md` §4 (full methodology, stated explicitly); `02_PRD.md` success metrics table (≥5x target); `ENDPOINT_OVERVIEW.md` (`/api/benchmark`, explicitly stubbed in Phase 0 "for shape consistency")
 
 ## Objective

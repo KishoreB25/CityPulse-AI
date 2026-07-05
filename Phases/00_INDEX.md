@@ -14,8 +14,8 @@
 | `04_PHASE3_DECISION_AGENT.md` | Conflict detection, supplementary-data round-trip, recommendations | 18–26 |
 | `05_PHASE4_REFLECTION_APPROVAL_NOTIFICATION.md` | Reflection Agent, human approval gate, notification dispatch | 24–32 |
 | `06_PHASE5_DASHBOARD_WHATIF.md` | Dashboard/Looker, agent activity timeline, what-if slider | 26–40 |
-| `07_PHASE6_BENCHMARK.md` | pandas vs. cudf.pandas/cuML benchmark | 36–44 |
-| `08_PHASE7_RESILIENCE_DEMO.md` | Forced-failure test, conflict test, demo rehearsal | 40–48 |
+| `07_PHASE6_BENCHMARK.md` | pandas vs. cudf.pandas/cuML benchmark (Assigned to friends) | 36–44 |
+| `08_PHASE7_RESILIENCE_DEMO.md` | Forced-failure test, conflict test, demo rehearsal (Assigned to friends) | 40–48 |
 | `09_EXTENSIONS.md` | Optional stretch features to strengthen judging position | anytime after core loop works |
 | `10_ARCHITECTURE_DIAGRAM.md` | Full system diagram (Mermaid + ASCII), reproduced/expanded from `04_ARCHITECTURE.md` §1 | reference |
 

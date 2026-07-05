@@ -1,6 +1,8 @@
 # Phase 7 — Resilience Verification + Demo Rehearsal
 
-**Window:** Hours 40–48 (final stretch, buffer included) · **Team:** whole team
+> **NOTE:** This phase will be handled by the user's friends.
+
+**Window:** Hours 40–48 (final stretch, buffer included) · **Team:** whole team (Assigned to friends)
 **Source:** `04_ARCHITECTURE.md` §4 and §5 (conflict/degraded paths); `02_PRD.md` §7 success metrics, §8 risks; `01_OVERVIEW.md` "what a judge should walk away believing"
 
 ## Objective
