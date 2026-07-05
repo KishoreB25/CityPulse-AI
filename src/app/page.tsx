@@ -6,7 +6,7 @@ import { useState } from "react";
 export default function Home() {
   const [selectedZone, setSelectedZone] = useState("Delhi");
   const [isLocating, setIsLocating] = useState(false);
-  const [customCoords, setCustomCoords] = useState<{lat: number, lng: number} | null>(null);
+  const [customCoords, setCustomCoords] = useState<{ lat: number, lng: number } | null>(null);
 
   const handleUseMyLocation = () => {
     setIsLocating(true);
@@ -38,61 +38,63 @@ export default function Home() {
 
   return (
     <main className="flex-1 flex flex-col bg-cp-bg-base min-h-screen overflow-y-auto text-cp-text-primary selection:bg-cp-accent-primary selection:text-cp-bg-base">
-      
+
       {/* 1. HERO SECTION */}
-      <section className="relative w-full border-b border-cp-border-default bg-cp-bg-surface flex flex-col items-center justify-center py-cp-16 px-cp-8 min-h-[70vh]">
+      <section className="relative w-full border-b border-cp-border-default bg-cp-bg-surface flex flex-col items-center justify-center py-cp-16 px-cp-8 min-h-[80vh]">
         <div className="max-w-6xl w-full mx-auto flex flex-col md:flex-row items-center gap-cp-12">
-          
+
           <div className="flex-1 space-y-cp-6">
             <div className="inline-block px-cp-3 py-cp-1 border border-cp-accent-primary text-cp-accent-primary text-cp-micro font-mono uppercase bg-cp-accent-primary/10 animate-pulse">
               System Online :: v1.0.0-rc
             </div>
-            
+
             <h1 className="text-4xl md:text-6xl font-mono uppercase font-bold text-cp-text-primary tracking-tighter leading-tight">
               CityPulse AI <br />
               <span className="text-cp-accent-primary">Core Orchestrator</span>
             </h1>
-            
+
             <p className="text-cp-h2 font-sans text-cp-text-secondary max-w-xl leading-relaxed">
               An autonomous, multi-agent intelligence platform designed to protect urban populations from environmental health risks in real-time.
             </p>
-            
-            <div className="flex flex-col sm:flex-row gap-cp-4 pt-cp-4 items-center">
-              <Link 
-                href="/dashboard"
-                className="px-cp-8 py-cp-4 border border-cp-accent-primary bg-cp-accent-primary text-cp-bg-base font-mono font-bold uppercase transition-all hover:bg-cp-accent-primary-hover hover:shadow-[0_0_20px_rgba(45,212,191,0.3)] text-center"
-              >
-                Enter Mission Control
-              </Link>
-              
-              <div className="flex items-center gap-2">
-                <select 
-                  value={selectedZone}
-                  onChange={(e) => setSelectedZone(e.target.value)}
-                  className="bg-cp-bg-base border border-cp-border-strong text-cp-text-primary px-4 py-4 font-mono uppercase outline-none focus:border-cp-text-muted hover:bg-cp-bg-surface-raised cursor-pointer transition-colors"
-                >
-                  <option value="Delhi">Delhi</option>
-                  <option value="Mumbai">Mumbai</option>
-                  <option value="Bangalore">Bangalore</option>
-                  <option value="New York">New York</option>
-                  <option value="London">London</option>
-                  <option value="Tokyo">Tokyo</option>
-                  {customCoords && <option value="Custom">📍 Custom</option>}
-                </select>
-                
-                <button
-                  onClick={handleUseMyLocation}
-                  disabled={isLocating}
-                  className="p-4 border border-cp-border-strong bg-cp-bg-base text-cp-text-primary hover:border-cp-text-muted hover:bg-cp-bg-surface-raised transition-colors disabled:opacity-50"
-                  title="Use My Current Location"
-                >
-                  {isLocating ? "⏳" : "📍"}
-                </button>
 
-                <Link 
+            <div className="flex flex-col xl:flex-row gap-cp-4 pt-cp-4 w-full">
+              <Link
+                href="/dashboard"
+                className="flex-1 sm:flex-none px-cp-8 h-12 border border-cp-accent-primary bg-cp-accent-primary text-cp-bg-base font-mono font-bold uppercase transition-all hover:bg-cp-accent-primary-hover hover:shadow-[0_0_20px_rgba(45,212,191,0.3)] text-center flex items-center justify-center whitespace-nowrap"
+              >
+                Dashboard 
+              </Link>
+
+              <div className="flex flex-col sm:flex-row items-stretch gap-2 flex-1 w-full">
+                <div className="flex items-stretch gap-2 flex-1 sm:flex-none">
+                  <select
+                    value={selectedZone}
+                    onChange={(e) => setSelectedZone(e.target.value)}
+                    className="flex-1 sm:flex-none w-full sm:w-auto bg-cp-bg-base border border-cp-border-strong text-cp-text-primary pl-4 pr-12 h-12 font-mono uppercase outline-none focus:border-cp-text-muted hover:bg-cp-bg-surface-raised cursor-pointer transition-colors appearance-none bg-[url('data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%2224%22%20height%3D%2224%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22none%22%20stroke%3D%22%23a1a1aa%22%20stroke-width%3D%222%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%3E%3Cpolyline%20points%3D%226%209%2012%2015%2018%209%22%3E%3C%2Fpolyline%3E%3C%2Fsvg%3E')] bg-no-repeat bg-[position:right_1rem_center] bg-[length:1em_1em]"
+                  >
+                    <option value="Delhi">Delhi</option>
+                    <option value="Mumbai">Mumbai</option>
+                    <option value="Bangalore">Bangalore</option>
+                    <option value="New York">New York</option>
+                    <option value="London">London</option>
+                    <option value="Tokyo">Tokyo</option>
+                    {customCoords && <option value="Custom">📍 Custom</option>}
+                  </select>
+
+                  <button
+                    onClick={handleUseMyLocation}
+                    disabled={isLocating}
+                    className="px-6 border border-cp-border-strong bg-cp-bg-base text-cp-text-primary hover:border-cp-text-muted hover:bg-cp-bg-surface-raised transition-colors disabled:opacity-50 flex items-center justify-center h-12"
+                    title="Use My Current Location"
+                  >
+                    {isLocating ? "⏳" : "LIVE"}
+                  </button>
+                </div>
+
+                <Link
                   href={getTriggerUrl()}
                   target="_blank"
-                  className="px-cp-6 py-cp-4 border border-cp-border-strong bg-cp-bg-base text-cp-text-primary font-mono uppercase transition-all hover:border-cp-text-muted hover:bg-cp-bg-surface-raised text-center whitespace-nowrap"
+                  className="flex-1 sm:flex-none px-cp-6 h-12 border border-cp-border-strong bg-cp-bg-base text-cp-text-primary font-mono uppercase transition-all hover:border-cp-text-muted hover:bg-cp-bg-surface-raised text-center flex items-center justify-center whitespace-nowrap"
                 >
                   Trigger Pipeline
                 </Link>
@@ -122,7 +124,7 @@ export default function Home() {
             <h2 className="text-cp-display font-mono uppercase text-cp-text-primary tracking-tight">What is this?</h2>
             <p className="text-cp-h3 text-cp-text-secondary font-mono mt-cp-2">The Multi-Agent Urban Defense Grid</p>
           </div>
-          
+
           <div className="grid grid-cols-1 md:grid-cols-2 gap-cp-8 mt-cp-8">
             <div className="border border-cp-border-default bg-cp-bg-surface p-cp-6 hover:border-cp-accent-primary transition-colors">
               <h3 className="text-cp-h2 font-mono text-cp-accent-primary uppercase mb-cp-4">1. Robust Gemini Integration</h3>
@@ -173,20 +175,20 @@ export default function Home() {
             </div>
           </div>
           <div className="flex-1 w-full flex justify-center">
-             <div className="grid grid-cols-2 gap-4 w-full">
-                <div className="border border-cp-border-default bg-cp-bg-base p-6 text-center">
-                  <div className="text-cp-data-lg text-cp-risk-severe font-mono">420+</div>
-                  <div className="text-cp-micro text-cp-text-muted font-mono uppercase mt-2">Hazardous AQI Events</div>
-                </div>
-                <div className="border border-cp-border-default bg-cp-bg-base p-6 text-center">
-                  <div className="text-cp-data-lg text-cp-risk-high font-mono">1.2M</div>
-                  <div className="text-cp-micro text-cp-text-muted font-mono uppercase mt-2">Citizens at Risk</div>
-                </div>
-                <div className="border border-cp-border-default bg-cp-bg-base p-6 text-center col-span-2">
-                  <div className="text-cp-data-lg text-cp-text-primary font-mono">0.0s</div>
-                  <div className="text-cp-micro text-cp-text-muted font-mono uppercase mt-2">Delay in AI Mitigation Response</div>
-                </div>
-             </div>
+            <div className="grid grid-cols-2 gap-4 w-full">
+              <div className="border border-cp-border-default bg-cp-bg-base p-6 text-center">
+                <div className="text-cp-data-lg text-cp-risk-severe font-mono">420+</div>
+                <div className="text-cp-micro text-cp-text-muted font-mono uppercase mt-2">Hazardous AQI Events</div>
+              </div>
+              <div className="border border-cp-border-default bg-cp-bg-base p-6 text-center">
+                <div className="text-cp-data-lg text-cp-risk-high font-mono">1.2M</div>
+                <div className="text-cp-micro text-cp-text-muted font-mono uppercase mt-2">Citizens at Risk</div>
+              </div>
+              <div className="border border-cp-border-default bg-cp-bg-base p-6 text-center col-span-2">
+                <div className="text-cp-data-lg text-cp-text-primary font-mono">0.0s</div>
+                <div className="text-cp-micro text-cp-text-muted font-mono uppercase mt-2">Delay in AI Mitigation Response</div>
+              </div>
+            </div>
           </div>
         </div>
       </section>
@@ -198,7 +200,7 @@ export default function Home() {
             <h2 className="text-cp-display font-mono uppercase text-cp-text-primary tracking-tight">How we solve it</h2>
             <p className="text-cp-h3 text-cp-text-secondary font-mono mt-cp-2">Deep Tech & GPU Acceleration</p>
           </div>
-          
+
           <div className="bg-cp-bg-surface border border-cp-border-default p-cp-8">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-cp-12">
               <div>
@@ -207,13 +209,13 @@ export default function Home() {
                   While the agents make decisions, they rely on a high-performance Python FastAPI backend. This service utilizes GPU-accelerated Pandas (cuDF) to run massive Monte Carlo simulations and "What-If" scenarios in milliseconds.
                 </p>
                 <div className="bg-[#0A0E14] border border-cp-border-subtle p-cp-4 font-mono text-cp-small text-cp-text-muted">
-                  <span className="text-cp-accent-primary">POST</span> /api/v1/simulate<br/>
-                  <span className="text-cp-risk-low">200 OK</span> - 45.2ms<br/>
-                  GPU Memory: 4.2GB / 24GB<br/>
+                  <span className="text-cp-accent-primary">POST</span> /api/v1/simulate<br />
+                  <span className="text-cp-risk-low">200 OK</span> - 45.2ms<br />
+                  GPU Memory: 4.2GB / 24GB<br />
                   500,000 rows processed.
                 </div>
               </div>
-              
+
               <div className="flex flex-col justify-center">
                 <div className="border-l border-cp-border-subtle pl-cp-6 space-y-cp-6">
                   <div>
