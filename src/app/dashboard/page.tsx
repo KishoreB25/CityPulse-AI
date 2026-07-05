@@ -49,6 +49,20 @@ export default function DashboardPage() {
     }
   };
 
+  const handleZoneChange = async (newZone: string) => {
+    setSelectedZone(newZone);
+    setIsLocating(true);
+    
+    try {
+      await fetch(`/api/orchestrator/run?zone=${newZone}`);
+      router.refresh();
+    } catch (error) {
+      console.error("Auto-trigger failed:", error);
+    } finally {
+      setIsLocating(false);
+    }
+  };
+
   return (
     <main className="min-h-screen bg-cp-bg-base text-cp-text-primary p-cp-4 sm:p-cp-6">
       <div className="max-w-[1600px] mx-auto h-full flex flex-col">
@@ -75,11 +89,14 @@ export default function DashboardPage() {
           
           <div className="flex items-center gap-cp-6">
             <div className="flex items-center gap-2">
-              <span className="text-cp-text-secondary text-xs uppercase tracking-widest font-mono">Location:</span>
+              <span className="text-cp-text-secondary text-xs uppercase tracking-widest font-mono">
+                {isLocating ? "⏳ Processing..." : "Location:"}
+              </span>
               <select 
                 value={selectedZone}
-                onChange={(e) => setSelectedZone(e.target.value)}
-                className="bg-cp-bg-surface border border-cp-border-subtle text-cp-text-primary px-3 py-1 font-mono text-xs outline-none focus:border-cp-text-secondary"
+                onChange={(e) => handleZoneChange(e.target.value)}
+                disabled={isLocating}
+                className="bg-cp-bg-surface border border-cp-border-subtle text-cp-text-primary px-3 py-1 font-mono text-xs outline-none focus:border-cp-text-secondary disabled:opacity-50"
               >
                 <option value="Delhi">Delhi</option>
                 <option value="Mumbai">Mumbai</option>

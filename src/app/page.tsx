@@ -2,38 +2,60 @@
 
 import Link from "next/link";
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 
 export default function Home() {
+  const router = useRouter();
   const [selectedZone, setSelectedZone] = useState("Delhi");
   const [isLocating, setIsLocating] = useState(false);
+  const [isProcessing, setIsProcessing] = useState(false);
   const [customCoords, setCustomCoords] = useState<{ lat: number, lng: number } | null>(null);
 
   const handleUseMyLocation = () => {
     setIsLocating(true);
+    setIsProcessing(true);
     if ("geolocation" in navigator) {
       navigator.geolocation.getCurrentPosition(
-        (position) => {
-          setCustomCoords({ lat: position.coords.latitude, lng: position.coords.longitude });
+        async (position) => {
+          const lat = position.coords.latitude;
+          const lng = position.coords.longitude;
+          setCustomCoords({ lat, lng });
           setSelectedZone("Custom");
-          setIsLocating(false);
+          
+          try {
+            await fetch(`/api/orchestrator/run?zone=Custom&lat=${lat}&lng=${lng}`);
+            router.push("/dashboard");
+          } catch (error) {
+            console.error("Auto-trigger failed:", error);
+            setIsProcessing(false);
+            setIsLocating(false);
+          }
         },
         (error) => {
           console.error("Error getting location:", error);
           alert("Failed to get location. Please allow location access.");
           setIsLocating(false);
+          setIsProcessing(false);
         }
       );
     } else {
       alert("Geolocation is not supported by your browser.");
       setIsLocating(false);
+      setIsProcessing(false);
     }
   };
 
-  const getTriggerUrl = () => {
-    if (selectedZone === "Custom" && customCoords) {
-      return `/api/orchestrator/run?zone=Custom&lat=${customCoords.lat}&lng=${customCoords.lng}`;
+  const handleZoneChange = async (newZone: string) => {
+    setSelectedZone(newZone);
+    setIsProcessing(true);
+    
+    try {
+      await fetch(`/api/orchestrator/run?zone=${newZone}`);
+      router.push("/dashboard");
+    } catch (error) {
+      console.error("Auto-trigger failed:", error);
+      setIsProcessing(false);
     }
-    return `/api/orchestrator/run?zone=${selectedZone}`;
   };
 
   return (
@@ -67,37 +89,37 @@ export default function Home() {
 
               <div className="flex flex-col sm:flex-row items-stretch gap-2 flex-1 w-full">
                 <div className="flex items-stretch gap-2 flex-1 sm:flex-none">
-                  <select
-                    value={selectedZone}
-                    onChange={(e) => setSelectedZone(e.target.value)}
-                    className="flex-1 sm:flex-none w-full sm:w-auto bg-cp-bg-base border border-cp-border-strong text-cp-text-primary pl-4 pr-12 h-12 font-mono uppercase outline-none focus:border-cp-text-muted hover:bg-cp-bg-surface-raised cursor-pointer transition-colors appearance-none bg-[url('data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%2224%22%20height%3D%2224%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22none%22%20stroke%3D%22%23a1a1aa%22%20stroke-width%3D%222%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%3E%3Cpolyline%20points%3D%226%209%2012%2015%2018%209%22%3E%3C%2Fpolyline%3E%3C%2Fsvg%3E')] bg-no-repeat bg-[position:right_1rem_center] bg-[length:1em_1em]"
-                  >
-                    <option value="Delhi">Delhi</option>
-                    <option value="Mumbai">Mumbai</option>
-                    <option value="Bangalore">Bangalore</option>
-                    <option value="New York">New York</option>
-                    <option value="London">London</option>
-                    <option value="Tokyo">Tokyo</option>
-                    {customCoords && <option value="Custom">📍 Custom</option>}
-                  </select>
+                  <div className="relative flex-1 sm:flex-none w-full sm:w-auto">
+                    {isProcessing && (
+                      <div className="absolute inset-0 z-10 flex items-center justify-center bg-cp-bg-surface border border-cp-border-strong text-cp-accent-primary font-mono text-xs uppercase animate-pulse h-12">
+                        ⏳ Processing...
+                      </div>
+                    )}
+                    <select
+                      value={selectedZone}
+                      onChange={(e) => handleZoneChange(e.target.value)}
+                      disabled={isProcessing}
+                      className="w-full bg-cp-bg-base border border-cp-border-strong text-cp-text-primary pl-4 pr-12 h-12 font-mono uppercase outline-none focus:border-cp-text-muted hover:bg-cp-bg-surface-raised cursor-pointer transition-colors appearance-none bg-[url('data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%2224%22%20height%3D%2224%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22none%22%20stroke%3D%22%23a1a1aa%22%20stroke-width%3D%222%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%3E%3Cpolyline%20points%3D%226%209%2012%2015%2018%209%22%3E%3C%2Fpolyline%3E%3C%2Fsvg%3E')] bg-no-repeat bg-[position:right_1rem_center] bg-[length:1em_1em] disabled:opacity-50"
+                    >
+                      <option value="Delhi">Delhi</option>
+                      <option value="Mumbai">Mumbai</option>
+                      <option value="Bangalore">Bangalore</option>
+                      <option value="New York">New York</option>
+                      <option value="London">London</option>
+                      <option value="Tokyo">Tokyo</option>
+                      {customCoords && <option value="Custom">📍 Custom</option>}
+                    </select>
+                  </div>
 
                   <button
                     onClick={handleUseMyLocation}
-                    disabled={isLocating}
+                    disabled={isLocating || isProcessing}
                     className="px-6 border border-cp-border-strong bg-cp-bg-base text-cp-text-primary hover:border-cp-text-muted hover:bg-cp-bg-surface-raised transition-colors disabled:opacity-50 flex items-center justify-center h-12"
                     title="Use My Current Location"
                   >
                     {isLocating ? "⏳" : "LIVE"}
                   </button>
                 </div>
-
-                <Link
-                  href={getTriggerUrl()}
-                  target="_blank"
-                  className="flex-1 sm:flex-none px-cp-6 h-12 border border-cp-border-strong bg-cp-bg-base text-cp-text-primary font-mono uppercase transition-all hover:border-cp-text-muted hover:bg-cp-bg-surface-raised text-center flex items-center justify-center whitespace-nowrap"
-                >
-                  Trigger Pipeline
-                </Link>
               </div>
             </div>
           </div>
