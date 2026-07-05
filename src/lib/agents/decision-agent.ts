@@ -25,12 +25,7 @@ import type {
 } from "@/lib/types/agent-schemas";
 import crypto from "crypto";
 
-// Initialize Gemini
-const apiKey = process.env.GEMINI_API_KEY;
-let ai: GoogleGenerativeAI | null = null;
-if (apiKey) {
-  ai = new GoogleGenerativeAI(apiKey);
-}
+// Gemini will be lazily initialized in the evaluate function to ensure process.env is fully loaded
 
 // -----------------------------------------------------------------------------
 // Risk Tier Mappings
@@ -120,9 +115,11 @@ async function evaluateDecisionWithHeuristics(
   conflictDetected: boolean,
   resolvedWithNewData: boolean
 ): Promise<{ risk_level: RiskLevel, rationale: string }> {
-  if (!ai) {
+  const apiKey = process.env.GEMINI_API_KEY;
+  if (!apiKey) {
     return { risk_level: computedRisk, rationale: `[Fallback] Computed Risk: ${computedRisk}. AI disabled.` };
   }
+  const ai = new GoogleGenerativeAI(apiKey);
 
   // Fetch learned heuristics for the zone
   const heuristicsRecords = await db.select().from(learnedHeuristics).where(eq(learnedHeuristics.zone, zone));

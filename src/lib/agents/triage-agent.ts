@@ -25,12 +25,7 @@ const ZONE_COORDINATES: Record<string, { lat: number; lng: number }> = {
 
 const DEFAULT_COORDS = { lat: 28.6139, lng: 77.2090 };
 
-// Initialize Gemini
-const apiKey = process.env.GEMINI_API_KEY;
-let ai: GoogleGenerativeAI | null = null;
-if (apiKey) {
-  ai = new GoogleGenerativeAI(apiKey);
-}
+// Gemini will be lazily initialized in the functions to ensure process.env is fully loaded
 
 /**
  * Classify a complaint text using Gemini.
@@ -38,9 +33,11 @@ if (apiKey) {
 async function classifyComplaintWithGemini(
   rawText: string
 ): Promise<{ category: ComplaintCategory; severity: SeveritySignal; summary: string }> {
-  if (!ai) {
-    throw new Error("Gemini AI client not initialized");
+  const apiKey = process.env.GEMINI_API_KEY;
+  if (!apiKey) {
+    throw new Error("Gemini AI client not initialized (missing API key)");
   }
+  const ai = new GoogleGenerativeAI(apiKey);
 
   const model = ai.getGenerativeModel({ model: "gemini-2.0-flash" });
   const prompt = `
@@ -134,7 +131,8 @@ function classifyComplaintKeywordFallback(
 export async function classifyComplaint(
   rawText: string
 ): Promise<{ category: ComplaintCategory; severity: SeveritySignal; summary: string }> {
-  if (ai) {
+  const apiKey = process.env.GEMINI_API_KEY;
+  if (apiKey) {
     try {
       return await classifyComplaintWithGemini(rawText);
     } catch (err: any) {

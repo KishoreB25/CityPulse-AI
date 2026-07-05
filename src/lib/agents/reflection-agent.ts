@@ -16,12 +16,7 @@ import {
 import { CONFIDENCE_CUTOFF } from "../config/thresholds";
 import crypto from "crypto";
 
-// Initialize Gemini
-const apiKey = process.env.GEMINI_API_KEY;
-let ai: GoogleGenerativeAI | null = null;
-if (apiKey) {
-  ai = new GoogleGenerativeAI(apiKey);
-}
+// Gemini will be lazily initialized in the functions to ensure process.env is fully loaded
 
 // Confidence threshold is now centralized in config/thresholds.ts
 
@@ -29,11 +24,13 @@ if (apiKey) {
  * Perform a fast LLM sanity check to ensure recommendations align with the rationale.
  */
 async function checkConsistencyWithLLM(decision: DecisionOutput): Promise<boolean> {
-  if (!ai) {
+  const apiKey = process.env.GEMINI_API_KEY;
+  if (!apiKey) {
     // If no AI configured, assume consistent (true)
     return true;
   }
 
+  const ai = new GoogleGenerativeAI(apiKey);
   const model = ai.getGenerativeModel({ model: "gemini-2.0-flash" });
   const prompt = `
     You are a validation agent. Your job is to read a policy decision and verify if the 'recommendations' logically follow the stated 'rationale'.
