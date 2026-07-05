@@ -1,6 +1,41 @@
+"use client";
+
 import Link from "next/link";
+import { useState } from "react";
 
 export default function Home() {
+  const [selectedZone, setSelectedZone] = useState("Delhi");
+  const [isLocating, setIsLocating] = useState(false);
+  const [customCoords, setCustomCoords] = useState<{lat: number, lng: number} | null>(null);
+
+  const handleUseMyLocation = () => {
+    setIsLocating(true);
+    if ("geolocation" in navigator) {
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          setCustomCoords({ lat: position.coords.latitude, lng: position.coords.longitude });
+          setSelectedZone("Custom");
+          setIsLocating(false);
+        },
+        (error) => {
+          console.error("Error getting location:", error);
+          alert("Failed to get location. Please allow location access.");
+          setIsLocating(false);
+        }
+      );
+    } else {
+      alert("Geolocation is not supported by your browser.");
+      setIsLocating(false);
+    }
+  };
+
+  const getTriggerUrl = () => {
+    if (selectedZone === "Custom" && customCoords) {
+      return `/api/orchestrator/run?zone=Custom&lat=${customCoords.lat}&lng=${customCoords.lng}`;
+    }
+    return `/api/orchestrator/run?zone=${selectedZone}`;
+  };
+
   return (
     <main className="flex-1 flex flex-col bg-cp-bg-base min-h-screen overflow-y-auto text-cp-text-primary selection:bg-cp-accent-primary selection:text-cp-bg-base">
       
@@ -22,20 +57,46 @@ export default function Home() {
               An autonomous, multi-agent intelligence platform designed to protect urban populations from environmental health risks in real-time.
             </p>
             
-            <div className="flex flex-col sm:flex-row gap-cp-4 pt-cp-4">
+            <div className="flex flex-col sm:flex-row gap-cp-4 pt-cp-4 items-center">
               <Link 
                 href="/dashboard"
                 className="px-cp-8 py-cp-4 border border-cp-accent-primary bg-cp-accent-primary text-cp-bg-base font-mono font-bold uppercase transition-all hover:bg-cp-accent-primary-hover hover:shadow-[0_0_20px_rgba(45,212,191,0.3)] text-center"
               >
                 Enter Mission Control
               </Link>
-              <Link 
-                href="/api/orchestrator/run"
-                target="_blank"
-                className="px-cp-8 py-cp-4 border border-cp-border-strong bg-cp-bg-base text-cp-text-primary font-mono uppercase transition-all hover:border-cp-text-muted hover:bg-cp-bg-surface-raised text-center"
-              >
-                Trigger Pipeline
-              </Link>
+              
+              <div className="flex items-center gap-2">
+                <select 
+                  value={selectedZone}
+                  onChange={(e) => setSelectedZone(e.target.value)}
+                  className="bg-cp-bg-base border border-cp-border-strong text-cp-text-primary px-4 py-4 font-mono uppercase outline-none focus:border-cp-text-muted hover:bg-cp-bg-surface-raised cursor-pointer transition-colors"
+                >
+                  <option value="Delhi">Delhi</option>
+                  <option value="Mumbai">Mumbai</option>
+                  <option value="Bangalore">Bangalore</option>
+                  <option value="New York">New York</option>
+                  <option value="London">London</option>
+                  <option value="Tokyo">Tokyo</option>
+                  {customCoords && <option value="Custom">📍 Custom</option>}
+                </select>
+                
+                <button
+                  onClick={handleUseMyLocation}
+                  disabled={isLocating}
+                  className="p-4 border border-cp-border-strong bg-cp-bg-base text-cp-text-primary hover:border-cp-text-muted hover:bg-cp-bg-surface-raised transition-colors disabled:opacity-50"
+                  title="Use My Current Location"
+                >
+                  {isLocating ? "⏳" : "📍"}
+                </button>
+
+                <Link 
+                  href={getTriggerUrl()}
+                  target="_blank"
+                  className="px-cp-6 py-cp-4 border border-cp-border-strong bg-cp-bg-base text-cp-text-primary font-mono uppercase transition-all hover:border-cp-text-muted hover:bg-cp-bg-surface-raised text-center whitespace-nowrap"
+                >
+                  Trigger Pipeline
+                </Link>
+              </div>
             </div>
           </div>
 

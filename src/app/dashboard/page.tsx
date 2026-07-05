@@ -11,6 +11,29 @@ import { AccelerationBenchmark } from "@/components/dashboard/AccelerationBenchm
 
 export default function DashboardPage() {
   const [selectedZone, setSelectedZone] = useState("Delhi");
+  const [isLocating, setIsLocating] = useState(false);
+  const [customCoords, setCustomCoords] = useState<{lat: number, lng: number} | null>(null);
+
+  const handleUseMyLocation = () => {
+    setIsLocating(true);
+    if ("geolocation" in navigator) {
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          setCustomCoords({ lat: position.coords.latitude, lng: position.coords.longitude });
+          setSelectedZone("Custom");
+          setIsLocating(false);
+        },
+        (error) => {
+          console.error("Error getting location:", error);
+          alert("Failed to get location. Please allow location access.");
+          setIsLocating(false);
+        }
+      );
+    } else {
+      alert("Geolocation is not supported by your browser.");
+      setIsLocating(false);
+    }
+  };
 
   return (
     <main className="min-h-screen bg-cp-bg-base text-cp-text-primary p-cp-4 sm:p-cp-6">
@@ -50,10 +73,19 @@ export default function DashboardPage() {
                 <option value="New York">New York</option>
                 <option value="London">London</option>
                 <option value="Tokyo">Tokyo</option>
+                {customCoords && <option value="Custom">📍 Custom</option>}
                 <option disabled>──────────</option>
                 <option value="Zone-A">Zone-A (Delhi Central)</option>
                 <option value="Zone-B">Zone-B (Delhi West)</option>
               </select>
+              <button
+                  onClick={handleUseMyLocation}
+                  disabled={isLocating}
+                  className="px-2 py-1 border border-cp-border-subtle bg-cp-bg-surface text-cp-text-primary hover:border-cp-text-muted transition-colors disabled:opacity-50 text-xs"
+                  title="Use My Current Location"
+                >
+                  {isLocating ? "⏳" : "📍"}
+              </button>
             </div>
 
             <span className="flex items-center gap-2 px-3 py-1 bg-cp-risk-low-bg border border-cp-risk-low/30 font-mono text-xs text-cp-risk-low uppercase">
