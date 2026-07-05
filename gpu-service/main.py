@@ -7,20 +7,25 @@ from pydantic import BaseModel
 import numpy as np
 
 # Check GPU/RAPIDS availability and set up fallback
+import sys
+
 GPU_AVAILABLE = False
 try:
-    # Try importing RAPIDS libraries
-    import cudf
+    # Try loading cudf.pandas first
+    import cudf.pandas
+    cudf.pandas.install()
+    
     import cuml
     from cuml.cluster import DBSCAN as cumlDBSCAN
     from cuml.linear_model import LinearRegression as cumlLinearRegression
     GPU_AVAILABLE = True
-    print("NVIDIA RAPIDS (cuDF/cuML) successfully loaded. GPU acceleration active!")
+    print("NVIDIA RAPIDS (cudf.pandas/cuML) successfully loaded. GPU acceleration active!")
 except ImportError:
     print("NVIDIA RAPIDS not found. Falling back to CPU mode (pandas & scikit-learn).")
-    import pandas as pd
-    from sklearn.cluster import DBSCAN as cpuDBSCAN
-    from sklearn.linear_model import LinearRegression as cpuLinearRegression
+
+import pandas as pd
+from sklearn.cluster import DBSCAN as cpuDBSCAN
+from sklearn.linear_model import LinearRegression as cpuLinearRegression
 
 app = FastAPI(title="CityPulse AI - GPU Acceleration Service")
 
@@ -93,8 +98,8 @@ def run_triage(req: TriageRequest):
     start_time = time.perf_counter()
 
     if GPU_AVAILABLE:
-        # GPU DBSCAN
-        df = cudf.DataFrame(coords_arr, columns=['lat', 'lng'])
+        # cuML DBSCAN on GPU using pandas DataFrame (accelerated by cudf.pandas!)
+        df = pd.DataFrame(coords_arr, columns=['lat', 'lng'])
         dbscan = cumlDBSCAN(eps=eps, min_samples=min_samples)
         dbscan.fit(df)
         labels = dbscan.labels_.to_numpy()
@@ -173,6 +178,19 @@ def run_forecast(req: ForecastRequest):
     # (For hackathon, alignment is 1-to-1 if arrays are equal size, or zipped)
     n = min(len(aqi_values), len(weather_temps))
     
+    # Check if we actually have enough overlapping data after checking min length above
+    # If the history arrays are severely unbalanced or empty, fall back.
+    if n <= 1:
+        # Secondary fallback if history is mismatched
+        predicted_aqi = (aqi_values[-1] if aqi_values else 75.0) * (1.0 + (req.traffic_multiplier - 1.0) * 0.3)
+        return {
+            "predicted_aqi": max(0, min(500, round(predicted_aqi))),
+            "confidence": 0.4,
+            "reasoning": "Fallback used due to mismatched or insufficient feature history.",
+            "computed_on_gpu": False,
+            "execution_time_ms": (time.perf_counter() - start_time) * 1000
+        }
+
     # Feature matrix X: [prior_aqi, temp, humidity, wind]
     X_data = []
     y_data = []
@@ -190,9 +208,9 @@ def run_forecast(req: ForecastRequest):
 
     # Train linear regressor
     if GPU_AVAILABLE:
-        # GPU cuML Linear Regression
-        X_df = cudf.DataFrame(X_arr)
-        y_df = cudf.Series(y_arr)
+        # GPU cuML Linear Regression using standard pandas DataFrame (accelerated!)
+        X_df = pd.DataFrame(X_arr)
+        y_df = pd.Series(y_arr)
         model = cumlLinearRegression()
         model.fit(X_df, y_df)
         
@@ -203,7 +221,7 @@ def run_forecast(req: ForecastRequest):
             weather_hums[-1],
             weather_winds[-1]
         ]], dtype=np.float32)
-        latest_df = cudf.DataFrame(latest_features)
+        latest_df = pd.DataFrame(latest_features)
         pred = model.predict(latest_df).to_numpy()[0]
     else:
         # CPU sklearn Linear Regression
@@ -253,11 +271,11 @@ def run_benchmark():
     cpu_db.fit(dummy_coords)
     cpu_time = (time.perf_counter() - start_cpu) * 1000
 
-    # GPU Run
+    # GPU Run (using cudf.pandas automatically under the hood when pd is called)
     gpu_time = cpu_time * 0.8  # dummy speedup representation if GPU unavailable
     if GPU_AVAILABLE:
         start_gpu = time.perf_counter()
-        df = cudf.DataFrame(dummy_coords, columns=['lat', 'lng'])
+        df = pd.DataFrame(dummy_coords, columns=['lat', 'lng'])
         gpu_db = cumlDBSCAN(eps=0.01, min_samples=5)
         gpu_db.fit(df)
         gpu_time = (time.perf_counter() - start_gpu) * 1000
