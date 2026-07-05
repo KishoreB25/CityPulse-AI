@@ -4,6 +4,7 @@ import {
   ingestNode, 
   triageNode, 
   forecastNode, 
+  resourceNode,
   decisionNode, 
   reflectionNode 
 } from "./nodes";
@@ -14,6 +15,7 @@ const workflow = new StateGraph(CityPulseStateAnnotation)
   .addNode("ingest", ingestNode)
   .addNode("triage", triageNode)
   .addNode("forecast", forecastNode)
+  .addNode("resource", resourceNode)
   .addNode("decision", decisionNode)
   .addNode("reflection", reflectionNode)
   
@@ -21,7 +23,8 @@ const workflow = new StateGraph(CityPulseStateAnnotation)
   .addEdge(START, "ingest")
   .addEdge("ingest", "triage")
   .addEdge("triage", "forecast")
-  .addEdge("forecast", "decision")
+  .addEdge("forecast", "resource")
+  .addEdge("resource", "decision")
   .addEdge("decision", "reflection")
   .addEdge("reflection", END);
 

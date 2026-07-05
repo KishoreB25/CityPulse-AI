@@ -14,6 +14,7 @@ import { getEpaForecastTier, CONFLICT_DIVERGENCE_THRESHOLD } from "../config/thr
 import type {
   ForecastOutput,
   TriageOutput,
+  ResourceOutput,
   DecisionOutput,
   RiskLevel,
   SeveritySignal,
@@ -69,9 +70,9 @@ export async function detectConflict(
 }
 
 /**
- * Generate deterministic recommendations based on the final computed risk tier.
+ * Generate deterministic recommendations based on the final computed risk tier and resources.
  */
-function generateRecommendations(tier: number, zone: string): RecommendationTarget[] {
+function generateRecommendations(tier: number, zone: string, bottlenecks: string[]): RecommendationTarget[] {
   const recs: RecommendationTarget[] = [];
   
   if (tier === 0) {
@@ -91,7 +92,11 @@ function generateRecommendations(tier: number, zone: string): RecommendationTarg
     recs.push({ target: "citizens", action: `Reduce prolonged or heavy outdoor exertion. Keep windows closed.` });
   } else {
     recs.push({ target: "schools", action: `${zone} schools: ALL outdoor activities must be canceled.` });
-    recs.push({ target: "hospital", action: `CRITICAL: Prepare for severe respiratory admission spikes.` });
+    if (bottlenecks.includes("hospital_beds") || bottlenecks.includes("hospital_beds_zone_a")) {
+      recs.push({ target: "hospital", action: `CRITICAL: Hospitals FULL. Route all new respiratory patients to neighboring zones.` });
+    } else {
+      recs.push({ target: "hospital", action: `CRITICAL: Prepare for severe respiratory admission spikes.` });
+    }
     recs.push({ target: "transit", action: `Transit authority: issue SEVERE air-quality alerts on all lines.` });
     recs.push({ target: "citizens", action: `Avoid all physical activity outdoors. Remain indoors with purified air if possible.` });
   }
@@ -107,6 +112,7 @@ async function generateRationale(
   zone: string,
   forecastOutput: ForecastOutput,
   triageOutput: TriageOutput,
+  resourceOutput: ResourceOutput,
   computedRisk: RiskLevel,
   conflictDetected: boolean,
   resolvedWithNewData: boolean
@@ -134,6 +140,7 @@ async function generateRationale(
     - Final Computed Risk Level: ${computedRisk}
     - Forecast AQI: ${forecastOutput.predicted_aqi} (Reasoning: ${forecastOutput.reasoning})
     - Triage Severity: ${triageOutput.severity_signal.toUpperCase()} (Citizen reports: ${triageOutput.complaint_count})
+    - Resource Risk Score: ${resourceOutput.resource_risk_score} (Bottlenecks: ${resourceOutput.bottlenecks.join(", ")})
     - Conflict Status: ${conflictContext}
     
     INSTRUCTIONS:
@@ -157,6 +164,7 @@ async function generateRationale(
 export async function decide(
   forecastOutput: ForecastOutput,
   triageOutput: TriageOutput,
+  resourceOutput: ResourceOutput,
   zone: string,
   resolvedWithNewData: boolean = false
 ): Promise<DecisionOutput> {
@@ -182,13 +190,14 @@ export async function decide(
   overallConfidence = Math.max(0.1, Math.min(overallConfidence, 1.0));
   
   // 4. Generate Target Recommendations (Deterministic)
-  const recommendations = generateRecommendations(finalTier, zone);
+  const recommendations = generateRecommendations(finalTier, zone, resourceOutput.bottlenecks);
   
   // 5. Generate Rationale (LLM)
   const rationale = await generateRationale(
     zone,
     forecastOutput,
     triageOutput,
+    resourceOutput,
     finalRiskLevel,
     conflictDetected,
     resolvedWithNewData

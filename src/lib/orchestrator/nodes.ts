@@ -4,6 +4,7 @@ import { triage } from "../agents/triage-agent";
 import { forecast } from "../agents/forecast-agent";
 import { decide } from "../agents/decision-agent";
 import { reflect } from "../agents/reflection-agent";
+import { resource } from "../agents/resource-agent";
 import { insertDecision } from "../db/bigquery-client";
 import { DecisionOutput } from "@/lib/types/agent-schemas";
 
@@ -49,17 +50,35 @@ export async function forecastNode(state: CityPulseState): Promise<Partial<CityP
 }
 
 /**
+ * Node: Resource
+ * Checks hospital and transit capacity against forecast constraints.
+ */
+export async function resourceNode(state: CityPulseState): Promise<Partial<CityPulseState>> {
+  console.log(`[LangGraph] Running Resource Node for zone: ${state.zone}`);
+  
+  if (!state.forecastResult) {
+    throw new Error("Missing forecast result for Resource Node");
+  }
+
+  const resourceResult = await resource(state.forecastResult, state.zone);
+  
+  return {
+    resourceResult
+  };
+}
+
+/**
  * Node: Decision
  * Synthesizes triage and forecast data into an actionable risk assessment.
  */
 export async function decisionNode(state: CityPulseState): Promise<Partial<CityPulseState>> {
   console.log(`[LangGraph] Running Decision Node for zone: ${state.zone}`);
   
-  if (!state.forecastResult || !state.triageResult) {
-    throw new Error("Missing required state (forecast or triage) for Decision Node");
+  if (!state.forecastResult || !state.triageResult || !state.resourceResult) {
+    throw new Error("Missing required state (forecast, triage, or resource) for Decision Node");
   }
 
-  const decisionResult = await decide(state.forecastResult, state.triageResult, state.zone);
+  const decisionResult = await decide(state.forecastResult, state.triageResult, state.resourceResult, state.zone);
   
   // Save to the database so the Approval Queue can pick it up.
   // We pass in state.decisionId to ensure the database ID perfectly matches the LangGraph thread_id

@@ -103,3 +103,19 @@ export const notificationsLog = sqliteTable('notifications_log', {
   dispatchStatus: text('dispatch_status').default('simulated'), // 'simulated' | 'sent' | 'failed'
   createdAt: text('created_at').default(sql`CURRENT_TIMESTAMP`),
 });
+
+export const hospitalStatus = sqliteTable("hospital_status", {
+  id: text("id").primaryKey().$defaultFn(() => crypto.randomUUID()),
+  zone: text("zone").notNull(),
+  totalBeds: integer("total_beds").notNull(),
+  availableBeds: integer("available_beds").notNull(),
+  lastUpdated: text("last_updated").notNull(),
+});
+
+export const transitStatus = sqliteTable("transit_status", {
+  id: text("id").primaryKey().$defaultFn(() => crypto.randomUUID()),
+  zone: text("zone").notNull(),
+  availableUnits: integer("available_units").notNull(),
+  status: text("status").notNull(), // 'operational', 'degraded', 'offline'
+  lastUpdated: text("last_updated").notNull(),
+});

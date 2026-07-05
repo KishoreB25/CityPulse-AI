@@ -99,6 +99,18 @@ export interface ForecastOutput {
 }
 
 /**
+ * Resource Agent output (TRD §2.4 - New)
+ * Evaluates city resource capacity.
+ */
+export interface ResourceOutput {
+  resource_risk_score: number; // 0.0 - 1.0
+  bottlenecks: string[];       // e.g. ["hospital_beds_zone_a"]
+  analysis: string;
+  data_stale: boolean;
+  _mock?: boolean;
+}
+
+/**
  * Triage Agent output (TRD §2.3)
  * Clustering and severity analysis of citizen reports.
  */
