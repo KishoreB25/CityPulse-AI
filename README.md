@@ -8,7 +8,7 @@
     <img src="https://img.shields.io/badge/FastAPI-009688?style=flat-square&logo=fastapi&logoColor=white" alt="FastAPI" />
     <img src="https://img.shields.io/badge/Google_Cloud-4285F4?style=flat-square&logo=google-cloud&logoColor=white" alt="GCP" />
     <img src="https://img.shields.io/badge/NVIDIA_RAPIDS-76B900?style=flat-square&logo=nvidia&logoColor=white" alt="NVIDIA" />
-    <img src="https://img.shields.io/badge/Gemini_2.0-8E75B2?style=flat-square&logo=googlebard&logoColor=white" alt="Gemini" />
+    <img src="https://img.shields.io/badge/OpenRouter-1A1A1A?style=flat-square&logo=openaq&logoColor=white" alt="OpenRouter" />
     <img src="https://img.shields.io/badge/SQLite-003B57?style=flat-square&logo=sqlite&logoColor=white" alt="SQLite" />
     <img src="https://img.shields.io/badge/Drizzle-C5F74F?style=flat-square&logo=drizzle&logoColor=black" alt="Drizzle ORM" />
   </p>
@@ -86,7 +86,7 @@ graph TD
 | **Frontend** | ![Next.js](https://img.shields.io/badge/Next.js-black?style=flat&logo=next.js&logoColor=white) | React App Router, Tailwind CSS, Recharts |
 | **Backend AI** | ![FastAPI](https://img.shields.io/badge/FastAPI-009688?style=flat&logo=fastapi&logoColor=white) | Python backend for heavy numerical compute |
 | **GPU Compute**| ![NVIDIA](https://img.shields.io/badge/RAPIDS-76B900?style=flat&logo=nvidia&logoColor=white) | cuDF, cuML for DBSCAN clustering & forecasting |
-| **LLM Engine** | ![Gemini](https://img.shields.io/badge/Gemini_2.0-8E75B2?style=flat&logo=googlebard&logoColor=white) | Agent reasoning, negotiation, and reflection |
+| **LLM Engine** | ![OpenRouter](https://img.shields.io/badge/OpenRouter-1A1A1A?style=flat&logo=openaq&logoColor=white) | Agent reasoning, negotiation, and reflection |
 | **Database** | ![SQLite](https://img.shields.io/badge/SQLite-003B57?style=flat&logo=sqlite&logoColor=white) | Drizzle ORM (Development/Hackathon database) |
 | **Deployment** | ![GCP](https://img.shields.io/badge/Google_Cloud-4285F4?style=flat&logo=googlecloud&logoColor=white) | Single VM architecture for ultra-low latency |
 
