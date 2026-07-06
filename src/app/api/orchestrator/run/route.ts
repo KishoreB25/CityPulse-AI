@@ -1,6 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import { runPipeline } from "@/lib/orchestrator";
 import crypto from "crypto";
+import { db } from "@/lib/db";
+import { decisions } from "@/lib/db/schema";
+import { desc, eq } from "drizzle-orm";
 
 export async function GET(request: NextRequest) {
   try {
@@ -13,6 +16,30 @@ export async function GET(request: NextRequest) {
     const lngParam = searchParams.get("lng");
     const lat = latParam ? parseFloat(latParam) : null;
     const lng = lngParam ? parseFloat(lngParam) : null;
+
+    // Cache Implementation (10 minutes)
+    if (zone !== "Custom") {
+      const latestDecision = await db.query.decisions.findFirst({
+        where: eq(decisions.zone, zone),
+        orderBy: [desc(decisions.generatedAt)]
+      });
+
+      if (latestDecision) {
+        const lastRunTime = new Date(latestDecision.generatedAt).getTime();
+        const now = Date.now();
+        const CACHE_TTL_MS = 10 * 60 * 1000; // 10 minutes
+
+        if (now - lastRunTime < CACHE_TTL_MS) {
+          console.log(`[API] Cache hit for ${zone}, skipping pipeline execution. TTL valid.`);
+          return NextResponse.json({
+            success: true,
+            cached: true,
+            message: `Returned cached data for ${zone}`,
+            data: latestDecision,
+          });
+        }
+      }
+    }
 
     // Generate a unique Thread ID for the LangGraph checkpointer
     const threadId = crypto.randomUUID();
