@@ -8,7 +8,7 @@
  */
 
 import { sqlite } from "../db/index";
-import { insertTimelineEntry } from "../db/bigquery-client";
+import { insertTimelineEntry, insertNotification } from "../db/bigquery-client";
 import type {
   DecisionOutput,
   NotificationEntry,
@@ -44,7 +44,7 @@ export async function notify(
   // 1. HARD PRECONDITION CHECK
   // We explicitly fetch the decision from the database to check its approval status.
   // We do not trust the caller. This is a structural block.
-  const decisionRecord = sqlite.prepare("SELECT * FROM decisions WHERE id = ?").get(decisionId) as any;
+  const decisionRecord = (await sqlite.execute({sql: "SELECT * FROM decisions WHERE id = ?", args: [decisionId]})).rows[0] as any;
   
   if (!decisionRecord) {
     throw new Error(`Decision ${decisionId} not found.`);
@@ -70,28 +70,11 @@ export async function notify(
   const notifications: NotificationEntry[] = [];
 
   // 2. Format and Save Notifications
-  const insertStmt = sqlite.prepare(`
-    INSERT INTO notifications_log (
-      id, decision_id, zone, timestamp, target_audience, message, approved_by, dispatch_status
-    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-  `);
-
   for (const audience of audiences) {
     const message = formatMessage(decision, audience);
     const notificationId = crypto.randomUUID();
     
-    insertStmt.run(
-      notificationId,
-      decisionId,
-      decision.zone,
-      timestamp,
-      audience,
-      message,
-      approvedBy,
-      "simulated"
-    );
-
-    notifications.push({
+    const entry: NotificationEntry = {
       id: notificationId,
       decision_id: decisionId,
       zone: decision.zone,
@@ -100,7 +83,11 @@ export async function notify(
       message,
       approved_by: approvedBy,
       dispatch_status: "simulated"
-    });
+    };
+
+    await insertNotification(entry);
+
+    notifications.push(entry);
   }
 
   // 3. Log to Timeline

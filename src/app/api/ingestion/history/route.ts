@@ -8,9 +8,10 @@ export async function GET(request: NextRequest) {
 
   try {
     // Fetch last 24 readings for the zone
-    const records = sqlite
-      .prepare("SELECT timestamp, aqi_value as aqi FROM aqi_history WHERE zone = ? ORDER BY timestamp DESC LIMIT 24")
-      .all(zone) as { timestamp: string; aqi: number }[];
+    const records = (await sqlite.execute({
+      sql: "SELECT timestamp, aqi_value as aqi FROM aqi_history WHERE zone = ? ORDER BY timestamp DESC LIMIT 24", 
+      args: [zone]
+    })).rows as unknown as { timestamp: string; aqi: number }[];
 
     // If no records found, return empty array so UI knows it's empty
     if (!records || records.length === 0) {

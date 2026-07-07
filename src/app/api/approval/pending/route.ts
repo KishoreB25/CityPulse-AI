@@ -5,9 +5,9 @@ import type { ApprovalPendingItem, DecisionOutput, ReflectionOutput } from "@/li
 export async function GET() {
   try {
     // Fetch all decisions with approval_status = 'pending'
-    const pendingDecisions = sqlite.prepare("SELECT * FROM decisions WHERE approval_status = 'pending' ORDER BY generated_at DESC").all();
+    const pendingDecisions = (await sqlite.execute({sql: "SELECT * FROM decisions WHERE approval_status = 'pending' ORDER BY generated_at DESC", args: []})).rows;
     
-    const items: ApprovalPendingItem[] = pendingDecisions.map((d: any) => {
+    const items: ApprovalPendingItem[] = await Promise.all(pendingDecisions.map(async (d: any) => {
       // Map Decision
       const decision: DecisionOutput & { id: string; generated_at: string } = {
         id: d.id,
@@ -21,7 +21,7 @@ export async function GET() {
       };
 
       // Fetch paired reflection if it exists
-      const reflectionRecord = sqlite.prepare("SELECT * FROM reflections WHERE decision_id = ?").get(d.id) as any;
+      const reflectionRecord = (await sqlite.execute({sql: "SELECT * FROM reflections WHERE decision_id = ?", args: [d.id]})).rows[0] as any;
       
       let reflection: ReflectionOutput;
       if (reflectionRecord) {
@@ -41,8 +41,8 @@ export async function GET() {
       }
       
       // Fetch underlying signals (Tier 1.3 Conflict View)
-      const latestForecastLog = sqlite.prepare("SELECT output_json FROM agent_decisions_log WHERE agent_name = 'forecast' AND zone = ? AND timestamp <= ? ORDER BY timestamp DESC LIMIT 1").get(d.zone, d.generated_at) as any;
-      const latestTriageLog = sqlite.prepare("SELECT output_json FROM agent_decisions_log WHERE agent_name = 'triage' AND zone = ? AND timestamp <= ? ORDER BY timestamp DESC LIMIT 1").get(d.zone, d.generated_at) as any;
+      const latestForecastLog = (await sqlite.execute({sql: "SELECT output_json FROM agent_decisions_log WHERE agent_name = 'forecast' AND zone = ? AND timestamp <= ? ORDER BY timestamp DESC LIMIT 1", args: [d.zone, d.generated_at]})).rows[0] as any;
+      const latestTriageLog = (await sqlite.execute({sql: "SELECT output_json FROM agent_decisions_log WHERE agent_name = 'triage' AND zone = ? AND timestamp <= ? ORDER BY timestamp DESC LIMIT 1", args: [d.zone, d.generated_at]})).rows[0] as any;
 
       const underlying_signals = {
         forecast: latestForecastLog ? JSON.parse(latestForecastLog.output_json) : null,
@@ -50,7 +50,7 @@ export async function GET() {
       };
 
       return { decision, reflection, underlying_signals };
-    });
+    }));
 
     return NextResponse.json(items);
   } catch (error: any) {

@@ -12,7 +12,7 @@ export async function GET(request: NextRequest) {
     }
 
     // Check if reflection already exists in db
-    const existingReflection = sqlite.prepare("SELECT * FROM reflections WHERE decision_id = ?").get(decision_id) as any;
+    const existingReflection = (await sqlite.execute({sql: "SELECT * FROM reflections WHERE decision_id = ?", args: [decision_id]})).rows[0] as any;
     if (existingReflection) {
       return NextResponse.json({
         decision_id: existingReflection.decision_id,
@@ -24,7 +24,7 @@ export async function GET(request: NextRequest) {
     }
 
     // Fetch the decision
-    const decisionRecord = sqlite.prepare("SELECT * FROM decisions WHERE id = ?").get(decision_id) as any;
+    const decisionRecord = (await sqlite.execute({sql: "SELECT * FROM decisions WHERE id = ?", args: [decision_id]})).rows[0] as any;
     if (!decisionRecord) {
       return NextResponse.json({ error: "Decision not found" }, { status: 404 });
     }
@@ -39,7 +39,7 @@ export async function GET(request: NextRequest) {
     };
 
     // We need Forecast and Triage outputs.
-    const forecastRecord = sqlite.prepare("SELECT * FROM aqi_forecasts WHERE zone = ? ORDER BY generated_at DESC LIMIT 1").get(decision.zone) as any;
+    const forecastRecord = (await sqlite.execute({sql: "SELECT * FROM aqi_forecasts WHERE zone = ? ORDER BY generated_at DESC LIMIT 1", args: [decision.zone]})).rows[0] as any;
     const forecastOutput: ForecastOutput = forecastRecord ? {
       zone: decision.zone,
       predicted_aqi: forecastRecord.predictedAqi,
@@ -48,7 +48,7 @@ export async function GET(request: NextRequest) {
       reasoning: forecastRecord.reasoning
     } : { zone: decision.zone, predicted_aqi: 50, horizon_hours: 24, confidence: 1.0, reasoning: "" };
 
-    const triageRecord = sqlite.prepare("SELECT * FROM triage_results WHERE zone = ? ORDER BY generated_at DESC LIMIT 1").get(decision.zone) as any;
+    const triageRecord = (await sqlite.execute({sql: "SELECT * FROM triage_results WHERE zone = ? ORDER BY generated_at DESC LIMIT 1", args: [decision.zone]})).rows[0] as any;
     const triageOutput: TriageOutput = triageRecord ? {
       zone: decision.zone,
       complaint_count: triageRecord.complaintCount,

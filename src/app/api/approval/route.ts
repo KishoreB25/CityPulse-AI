@@ -21,17 +21,18 @@ export async function POST(request: NextRequest) {
     const status = approved ? "approved" : "rejected";
 
     // Check if decision exists
-    const decision = sqlite.prepare("SELECT * FROM decisions WHERE id = ?").get(decision_id) as any;
+    const decision = (await sqlite.execute({sql: "SELECT * FROM decisions WHERE id = ?", args: [decision_id]})).rows[0] as any;
     if (!decision) {
       return NextResponse.json({ error: "Decision not found" }, { status: 404 });
     }
 
     // Update decision approval status
-    sqlite.prepare(`
+    await sqlite.execute({
+      sql: `
       UPDATE decisions 
       SET approval_status = ?, reviewer_id = ?, reviewed_at = ?
       WHERE id = ?
-    `).run(status, reviewer_id, timestamp, decision_id);
+    `, args: [status, reviewer_id, timestamp, decision_id]});
 
     // Log to Timeline
     await insertTimelineEntry({

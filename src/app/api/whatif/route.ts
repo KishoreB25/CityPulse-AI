@@ -17,14 +17,14 @@ export async function POST(request: NextRequest) {
     }
 
     // 1. Fetch latest triage data for the zone from the agent log
-    const triageRecord = sqlite.prepare("SELECT output_json FROM agent_decisions_log WHERE zone = ? AND agent_name = 'triage' ORDER BY timestamp DESC LIMIT 1").get(zone) as any;
+    const triageRecord = (await sqlite.execute({sql: "SELECT output_json FROM agent_decisions_log WHERE zone = ? AND agent_name = 'triage' ORDER BY timestamp DESC LIMIT 1", args: [zone]})).rows[0] as any;
     let triageOutput: TriageOutput = { zone, complaint_count: 0, trend_vs_yesterday: "flat", severity_signal: "low", hotspot_detected: false, summary: "No data" };
     if (triageRecord && triageRecord.output_json) {
         triageOutput = JSON.parse(triageRecord.output_json);
     }
 
     // 2. Fetch latest actual forecast data to use as a baseline
-    const forecastRecord = sqlite.prepare("SELECT output_json FROM agent_decisions_log WHERE zone = ? AND agent_name = 'forecast' ORDER BY timestamp DESC LIMIT 1").get(zone) as any;
+    const forecastRecord = (await sqlite.execute({sql: "SELECT output_json FROM agent_decisions_log WHERE zone = ? AND agent_name = 'forecast' ORDER BY timestamp DESC LIMIT 1", args: [zone]})).rows[0] as any;
     let baseAqi = 100;
     let baseConfidence = 0.8;
     if (forecastRecord && forecastRecord.output_json) {

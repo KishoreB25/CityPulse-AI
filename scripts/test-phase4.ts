@@ -1,7 +1,7 @@
 import { reflect } from "../src/lib/agents/reflection-agent";
 import { notify } from "../src/lib/agents/notification-agent";
 import { decide } from "../src/lib/agents/decision-agent";
-import { insertDecision } from "../src/lib/db/bigquery-client";
+import { insertDecision, updateDecisionApproval } from "../src/lib/db/bigquery-client";
 import { sqlite } from "../src/lib/db/index";
 import type { ForecastOutput, TriageOutput } from "../src/lib/types/agent-schemas";
 
@@ -48,12 +48,7 @@ async function runPhase4Tests() {
 
   // 4. Manually Approve
   console.log("\n4. Simulating Human Approval...");
-  const timestamp = new Date().toISOString();
-  sqlite.prepare(`
-    UPDATE decisions 
-    SET approval_status = 'approved', reviewer_id = 'test_human', reviewed_at = ?
-    WHERE id = ?
-  `).run(timestamp, decisionId);
+  await updateDecisionApproval(decisionId, true, 'test_human');
   console.log("   Decision approved by 'test_human'.");
 
   // 5. Test Structural Block (Dispatch AFTER Approval)

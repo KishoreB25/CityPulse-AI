@@ -5,7 +5,7 @@ import type { NotificationEntry } from "@/lib/types/agent-schemas";
 export async function GET() {
   try {
     // Fetch all notifications from the log
-    const notifications = sqlite.prepare("SELECT * FROM notifications_log ORDER BY timestamp DESC").all() as any[];
+    const notifications = (await sqlite.execute({sql: "SELECT * FROM notifications_log ORDER BY timestamp DESC", args: []})).rows as any[];
     
     const entries: NotificationEntry[] = notifications.map(n => ({
       id: n.id,
