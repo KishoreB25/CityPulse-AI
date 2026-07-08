@@ -40,7 +40,7 @@ CityPulse AI bridges the gap between raw data and municipal action by automating
 
 ## 📊 Live GPU Dashboard
 
-![Dashboard showing GPU Performance](images/gpu.png)
+![Dashboard showing GPU Performance](Images/gpu.png)
 
 ## ⚙️ How it Works
 
