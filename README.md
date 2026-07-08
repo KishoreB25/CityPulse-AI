@@ -52,6 +52,9 @@ The system operates via a continuous, stateful pipeline (powered by LangGraph pr
 4. **Human Oversight:** The proposed action is queued in the "Mission Control" dashboard. A human operator approves or rejects it (with feedback to train the AI).
 5. **Notification:** Once approved, alerts are dispatched to relevant municipal departments or citizens.
 
+### ⚡ Serverless GPU Infrastructure
+All heavy numerical computations (clustering, linear regression) are offloaded to a **Serverless NVIDIA T4 GPU** hosted on [Modal](https://modal.com). The FastAPI backend utilizes the `nvidia/cuda:12.2.2-devel` image and the NVIDIA RAPIDS suite (`cuDF` and `cuML`). Modal's cold-start optimizations allow the GPU to wake up, execute the mathematical models, and spin down in milliseconds, ensuring highly cost-effective and scalable performance.
+
 ---
 
 ## 🏗️ Architecture
